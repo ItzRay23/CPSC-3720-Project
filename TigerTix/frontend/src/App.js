@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
+import "./a11y.css";
+import EventList from "./components/EventList";
 function App() {
 const [events, setEvents] = useState([]);
 useEffect(() => {

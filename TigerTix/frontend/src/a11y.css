@@ -1,0 +1,35 @@
+/* src/a11y.css */
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -1000px;
+  left: 0;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 2px solid #000;
+  z-index: 1000;
+}
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+/* Visible focus outline for keyboard users */
+:focus-visible {
+  outline: 3px solid #222;
+  outline-offset: 2px;
+}
+
+/* Screen-reader-only utility */
+.sr-only {
+  border: 0 !important;
+  clip: rect(1px, 1px, 1px, 1px) !important;
+  clip-path: inset(50%) !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  width: 1px !important;
+  white-space: nowrap !important;
+}
