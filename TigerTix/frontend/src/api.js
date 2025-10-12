@@ -8,7 +8,8 @@ const API_BASE =
 export async function fetchEvents() {
   const res = await fetch(`${API_BASE}/api/events`);
   if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
-  return res.json();
+  const data = await res.json();
+  return data.events || [];
 }
 
 export async function purchaseEvent(id) {

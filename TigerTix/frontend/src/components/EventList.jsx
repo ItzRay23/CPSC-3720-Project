@@ -62,10 +62,10 @@ export default function EventList() {
         {statusMsg}
       </div>
 
-      <h2 id="events-heading">Upcoming Events</h2>
-      <ul aria-labelledby="events-heading">
+      <h2 id="events-heading" style={{marginTop: '2rem', fontSize: '2rem', color: '#333'}}>Upcoming Events</h2>
+      <div className="event-list" aria-labelledby="events-heading">
         {events.map((ev) => (
-          <li key={ev.id}>
+          <div key={ev.id} className="event-card">
             <article aria-labelledby={`event-${ev.id}-title`}>
               <h3 id={`event-${ev.id}-title`}>{ev.name}</h3>
 
@@ -94,9 +94,9 @@ export default function EventList() {
                 {ev.tickets > 0 ? "Buy Ticket" : "Sold Out"}
               </button>
             </article>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </>
   );
 }

@@ -16,17 +16,4 @@ root.render(
   </React.StrictMode>
 );
 
-
-const eventsRootEl = document.getElementById("events-root");
-if (eventsRootEl) {
-  const eventsRoot = ReactDOM.createRoot(eventsRootEl);
-  eventsRoot.render(
-    <React.StrictMode>
-      <main id="main" tabIndex={-1}>
-        <EventList />
-      </main>
-    </React.StrictMode>
-  );
-}
-
 reportWebVitals();
