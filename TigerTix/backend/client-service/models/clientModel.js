@@ -1,5 +1,9 @@
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const db = require(path.join(__dirname, '../../shared-db'));
+
+// Connect to the shared database
+const dbPath = path.join(__dirname, '../../shared-db/database.sqlite');
+const db = new sqlite3.Database(dbPath);
 
 // Retrieve all events from database
 const getAllEvents = () => {
