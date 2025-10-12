@@ -63,8 +63,8 @@ const createEvent = async (req, res) => {
     const validationErrors = validateEventData(eventData);
     if (validationErrors.length > 0) {
         return res.status(400).json({
-            error: 'Validation failed',
-            details: validationErrors
+            message: 'Validation failed',
+            errors: validationErrors
         });
     }
 
@@ -72,14 +72,16 @@ const createEvent = async (req, res) => {
         // Format data before saving
         eventData.name = eventData.name.charAt(0).toUpperCase() + eventData.name.slice(1);
         const newEvent = await addEvent(eventData);
-        
         res.status(201).json({
             message: 'Event created successfully',
             event: newEvent
         });
     } catch (err) {
         console.error('Error creating event:', err);
-        res.status(500).json({ error: 'Failed to create event in database' });
+        res.status(500).json({
+            message: 'Failed to create event in database',
+            error: err.message || 'Unknown error'
+        });
     }
 };
 
@@ -89,12 +91,16 @@ const getEvents = async (req, res) => {
     try {
         const events = await getAllEvents();
         res.json({
+            message: 'Events fetched successfully',
             count: events.length,
             events: events
         });
     } catch (err) {
         console.error('Error fetching events:', err);
-        res.status(500).json({ error: 'Failed to fetch events from database' });
+        res.status(500).json({
+            message: 'Failed to fetch events from database',
+            error: err.message || 'Unknown error'
+        });
     }
 };
 
@@ -104,19 +110,30 @@ const getEvent = async (req, res) => {
     // Validate ID
     const idError = validateId(req.params.id);
     if (idError) {
-        return res.status(400).json({ error: idError });
+        return res.status(400).json({
+            message: 'Invalid event ID',
+            error: idError
+        });
     }
 
     try {
         const event = await getEventById(req.params.id);
-        res.json(event);
+        if (!event) {
+            return res.status(404).json({
+                message: 'Event not found',
+                error: 'No event with the provided ID'
+            });
+        }
+        res.json({
+            message: 'Event fetched successfully',
+            event: event
+        });
     } catch (err) {
         console.error('Error fetching event:', err);
-        if (err.message === 'Event not found') {
-            res.status(404).json({ error: 'Event not found' });
-        } else {
-            res.status(500).json({ error: 'Failed to fetch event from database' });
-        }
+        res.status(500).json({
+            message: 'Failed to fetch event from database',
+            error: err.message || 'Unknown error'
+        });
     }
 };
 
@@ -126,28 +143,39 @@ const updateTickets = async (req, res) => {
     // Validate ID
     const idError = validateId(req.params.id);
     if (idError) {
-        return res.status(400).json({ error: idError });
+        return res.status(400).json({
+            message: 'Invalid event ID',
+            error: idError
+        });
     }
 
     // Validate tickets
     const ticketsError = validateTickets(req.body.tickets);
     if (ticketsError) {
-        return res.status(400).json({ error: ticketsError });
+        return res.status(400).json({
+            message: 'Invalid ticket count',
+            error: ticketsError
+        });
     }
 
     try {
         const updatedEvent = await updateEventTickets(req.params.id, req.body.tickets);
+        if (!updatedEvent) {
+            return res.status(404).json({
+                message: 'Event not found',
+                error: 'No event with the provided ID'
+            });
+        }
         res.json({
             message: 'Tickets updated successfully',
             event: updatedEvent
         });
     } catch (err) {
         console.error('Error updating tickets:', err);
-        if (err.message === 'Event not found') {
-            res.status(404).json({ error: 'Event not found' });
-        } else {
-            res.status(500).json({ error: 'Failed to update tickets in database' });
-        }
+        res.status(500).json({
+            message: 'Failed to update tickets in database',
+            error: err.message || 'Unknown error'
+        });
     }
 };
 
