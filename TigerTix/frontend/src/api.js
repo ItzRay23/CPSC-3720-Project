@@ -1,21 +1,21 @@
 // src/api.js
-// If you set a CRA proxy (below), keep API_BASE as "" (same-origin).
-// Otherwise, point it at your client-service port (e.g., 6001).
-
 const API_BASE =
   process.env.REACT_APP_CLIENT_API_BASE?.trim?.() || ""; // use proxy/same-origin
 
 export async function fetchEvents() {
-  const res = await fetch(`${API_BASE}/api/events`);
+  const res = await fetch(`${API_BASE}/api/events`, {
+    headers: { Accept: "application/json" },
+  });
   if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
   const data = await res.json();
-  return data.events || [];
+  // Your backend returns the array directly; fall back if someone later wraps it.
+  return Array.isArray(data) ? data : data?.events ?? [];
 }
 
 export async function purchaseEvent(id) {
   const res = await fetch(`${API_BASE}/api/events/${id}/purchase`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
   });
   if (!res.ok) {
     const msg = await res.text().catch(() => "");
