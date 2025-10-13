@@ -1,4 +1,18 @@
-const { addEvent, getAllEvents, getEventById, updateEventTickets } = require('../models/adminModel');
+const { addEvent, getAllEvents, getEventById, updateEventTickets, removeEvent } = require('../models/adminModel');
+// Controller: deleteEvent
+// DELETE /events/:id - remove an event by ID
+const deleteEvent = async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!id) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+    }
+    try {
+        const result = await removeEvent(id);
+        res.json(result);
+    } catch (err) {
+        res.status(404).json({ message: err.message });
+    }
+};
 
 // Validation functions
 const validateEventData = (eventData) => {
@@ -183,5 +197,6 @@ module.exports = {
     createEvent,
     getEvents,
     getEvent,
-    updateTickets
+    updateTickets,
+    deleteEvent
 };

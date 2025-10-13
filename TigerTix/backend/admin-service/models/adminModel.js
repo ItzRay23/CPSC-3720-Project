@@ -85,9 +85,27 @@ process.on('exit', () => {
     db.close();
 });
 
+// Remove event by ID
+const removeEvent = (id) => {
+    return new Promise((resolve, reject) => {
+        db.run('DELETE FROM events WHERE id = ?', [id], function(err) {
+            if (err) {
+                reject(new Error('Database error: ' + err.message));
+                return;
+            }
+            if (this.changes === 0) {
+                reject(new Error('Event not found'));
+                return;
+            }
+            resolve({ message: 'Event removed', id });
+        });
+    });
+};
+
 module.exports = {
     addEvent,
     getAllEvents,
     getEventById,
-    updateEventTickets
+    updateEventTickets,
+    removeEvent
 };

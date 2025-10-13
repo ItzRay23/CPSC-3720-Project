@@ -4,13 +4,16 @@ const {
     createEvent,
     getEvents,
     getEvent,
-    updateTickets
+    updateTickets,
+    deleteEvent
 } = require('../controllers/adminController');
+const { removeEvent } = require('../models/adminModel');
 
 // Event routes
 router.post('/events', createEvent);            // Create new event
 router.get('/events', getEvents);               // Get all events
 router.get('/events/:id', getEvent);            // Get specific event
 router.patch('/events/:id/tickets', updateTickets);  // Update ticket count
+router.delete('/events/:id', deleteEvent);      // Delete an event
 
 module.exports = router;
