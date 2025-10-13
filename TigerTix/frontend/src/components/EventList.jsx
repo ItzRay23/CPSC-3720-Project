@@ -2,6 +2,11 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchEvents, purchaseEvent } from "../api";
 
+/**
+ * @component EventList
+ * @description Displays a list of events and allows ticket purchase.
+ * @returns {JSX.Element}
+ */
 export default function EventList() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +26,13 @@ export default function EventList() {
       }
     })();
   }, []);
-
+  
+  /**
+   * @function handleBuy
+   * @description Handles ticket purchase for an event.
+   * @param {number} id - Event ID
+   * @returns {Promise<void>}
+   */
   async function handleBuy(id) {
     setErr("");
     try {

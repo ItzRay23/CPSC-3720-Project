@@ -1,6 +1,13 @@
 const { getAllEvents, getEventById, updateEventTickets } = require('../models/clientModel');
 
 // GET /api/events
+/**
+ * @function listEvents
+ * @description Lists all events for clients.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {void}
+ */
 const listEvents = async (req, res) => {
   try {
     const events = await getAllEvents();
@@ -17,8 +24,13 @@ const listEvents = async (req, res) => {
   }
 };
 
-// POST /api/events/:id/purchase
-// Body: { quantity: number }
+/**
+ * @function purchaseTickets
+ * @description Handles ticket purchase for an event.
+ * @param {Object} req - Express request object (expects event ID in params, quantity in body)
+ * @param {Object} res - Express response object
+ * @returns {void}
+ */
 const purchaseTickets = async (req, res) => {
   const eventId = parseInt(req.params.id);
   const quantity = parseInt(req.body.quantity) || 1;

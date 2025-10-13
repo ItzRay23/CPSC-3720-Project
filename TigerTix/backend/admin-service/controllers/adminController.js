@@ -1,6 +1,12 @@
 const { addEvent, getAllEvents, getEventById, updateEventTickets, removeEvent } = require('../models/adminModel');
-// Controller: deleteEvent
-// DELETE /events/:id - remove an event by ID
+
+/**
+ * @function deleteEvent
+ * @description Deletes an event by ID.
+ * @param {Object} req - Express request object (expects event ID in params)
+ * @param {Object} res - Express response object
+ * @returns {void}
+ */
 const deleteEvent = async (req, res) => {
     const id = parseInt(req.params.id, 10);
     if (!id) {
@@ -14,7 +20,12 @@ const deleteEvent = async (req, res) => {
     }
 };
 
-// Validation functions
+/**
+ * @function validateEventData
+ * @description Validates event data for required fields, date format, and ticket count.
+ * @param {Object} eventData - The event data to validate. Should include name (string), date (YYYY-MM-DD string), and tickets (integer).
+ * @returns {Array<string>} - An array of error messages. Empty if validation passes.
+ */
 const validateEventData = (eventData) => {
     const errors = [];
     
@@ -64,8 +75,13 @@ const validateTickets = (tickets) => {
     return null;
 };
 
-// Controller: createEvent
-// Expects JSON body: { name: string, date: string (YYYY-MM-DD), tickets: number }
+/**
+ * @function createEvent
+ * @description Creates a new event in the database.
+ * @param {Object} req - Express request object (expects event data in body)
+ * @param {Object} res - Express response object
+ * @returns {void}
+ */
 const createEvent = async (req, res) => {
     const eventData = {
         name: req.body.name?.trim(),
@@ -99,8 +115,13 @@ const createEvent = async (req, res) => {
     }
 };
 
-// Controller: getEvents
-// GET /events - retrieve all events
+/**
+ * @function getEvents
+ * @description Retrieves all events from the database.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {void}
+ */
 const getEvents = async (req, res) => {
     try {
         const events = await getAllEvents();
@@ -118,8 +139,13 @@ const getEvents = async (req, res) => {
     }
 };
 
-// Controller: getEvent
-// GET /events/:id - retrieve a specific event
+/**
+ * @function getEvent
+ * @description Retrieves a specific event by ID.
+ * @param {Object} req - Express request object (expects event ID in params)
+ * @param {Object} res - Express response object
+ * @returns {void}
+ */
 const getEvent = async (req, res) => {
     // Validate ID
     const idError = validateId(req.params.id);
@@ -151,8 +177,13 @@ const getEvent = async (req, res) => {
     }
 };
 
-// Controller: updateTickets
-// PATCH /events/:id/tickets - update ticket count for an event
+/**
+ * @function updateTickets
+ * @description Updates the ticket count for a specific event.
+ * @param {Object} req - Express request object (expects event ID in params, tickets in body)
+ * @param {Object} res - Express response object
+ * @returns {void}
+ */
 const updateTickets = async (req, res) => {
     // Validate ID
     const idError = validateId(req.params.id);

@@ -5,9 +5,13 @@ const path = require('path');
 const dbPath = path.join(__dirname, '../../shared-db/database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
-// Pure database operations below - no business logic
+/**
+ * @function addEvent
+ * @description Inserts a new event into the database.
+ * @param {Object} eventData - Event data { name, date, tickets }
+ * @returns {Promise<Object>} - Resolves with the newly created event
+ */
 
-// Insert event into database
 const addEvent = (eventData) => {
     return new Promise((resolve, reject) => {
         const { name, date, tickets } = eventData;
@@ -33,7 +37,11 @@ const addEvent = (eventData) => {
     });
 };
 
-// Retrieve all events from database
+/**
+ * @function getAllEvents
+ * @description Retrieves all events from the database.
+ * @returns {Promise<Array>} - Resolves with an array of events
+ */
 const getAllEvents = () => {
     return new Promise((resolve, reject) => {
         db.all('SELECT * FROM events ORDER BY date', [], (err, rows) => {
@@ -46,7 +54,12 @@ const getAllEvents = () => {
     });
 };
 
-// Retrieve single event by ID
+/**
+ * @function getEventById
+ * @description Retrieves a single event by ID.
+ * @param {number} id - Event ID
+ * @returns {Promise<Object>} - Resolves with the event object
+ */
 const getEventById = (id) => {
     return new Promise((resolve, reject) => {
         db.get('SELECT * FROM events WHERE id = ?', [id], (err, row) => {
@@ -63,7 +76,13 @@ const getEventById = (id) => {
     });
 };
 
-// Update event tickets
+/**
+ * @function updateEventTickets
+ * @description Updates the ticket count for an event.
+ * @param {number} id - Event ID
+ * @param {number} tickets - New ticket count
+ * @returns {Promise<Object>} - Resolves with the updated event
+ */
 const updateEventTickets = (id, tickets) => {
     return new Promise((resolve, reject) => {
         db.run('UPDATE events SET tickets = ? WHERE id = ?', [tickets, id], function(err) {
@@ -85,7 +104,12 @@ process.on('exit', () => {
     db.close();
 });
 
-// Remove event by ID
+/**
+ * @function removeEvent
+ * @description Deletes an event by ID.
+ * @param {number} id - Event ID
+ * @returns {Promise<Object>} - Resolves with a message and ID if successful
+ */
 const removeEvent = (id) => {
     return new Promise((resolve, reject) => {
         db.run('DELETE FROM events WHERE id = ?', [id], function(err) {

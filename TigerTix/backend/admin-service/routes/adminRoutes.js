@@ -7,7 +7,6 @@ const {
     updateTickets,
     deleteEvent
 } = require('../controllers/adminController');
-const { removeEvent } = require('../models/adminModel');
 
 // Event routes
 router.post('/events', createEvent);            // Create new event
