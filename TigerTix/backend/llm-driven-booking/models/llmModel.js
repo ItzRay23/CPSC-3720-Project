@@ -23,9 +23,16 @@ try {
 const CLIENT_SERVICE_BASE_URL = process.env.CLIENT_SERVICE_URL || 'http://localhost:6001';
 
 // Initialize OpenAI client (will use environment variable OPENAI_API_KEY)
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+let openai = null;
+try {
+    if (process.env.OPENAI_API_KEY) {
+        openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+    }
+} catch (error) {
+    console.warn('OpenAI client not initialized:', error.message);
+}
 
 /**
  * @function getAllEvents
@@ -41,9 +48,13 @@ const getAllEvents = async () => {
             throw new Error(`Client service responded with ${response.status}: ${response.statusText}`);
         }
         
-        const events = await response.json();
-        console.log(`✅ Retrieved ${events.length} events from client service`);
-        return Array.isArray(events) ? events : events?.events ?? [];
+        const data = await response.json();
+        console.log(`📄 Raw response from client service:`, JSON.stringify(data, null, 2));
+        
+        // Handle different response formats from client service
+        const events = Array.isArray(data) ? data : data?.events ?? [];
+        console.log(`✅ Retrieved ${events.length} events from client service:`, events.map(e => `${e.name} (ID: ${e.id})`));
+        return events;
     } catch (error) {
         console.error('Error fetching events from client service:', error);
         throw new Error('Failed to fetch events from client service: ' + error.message);
@@ -152,7 +163,7 @@ const purchaseTicketsFromClient = async (eventId, ticketsToBook) => {
         
         return {
             success: true,
-            event: finalResult,
+            event: finalResult.event,  // Extract the event object from the client service response
             ticketsBooked: ticketsToBook
         };
         
@@ -204,6 +215,11 @@ Rules:
 - Use "booking" intent only for clear ticket booking requests
 - Set confidence based on how clear the user's intent is`;
 
+        if (!openai) {
+            console.log(`⚠️ [${requestId}] OpenAI not available, using fallback parser...`);
+            return await fallbackParser(userInput, availableEvents);
+        }
+
         console.log(`🚀 [${requestId}] Sending request to OpenAI GPT-4o-mini...`);
         const startTime = Date.now();
         
@@ -253,21 +269,28 @@ async function fallbackParser(userInput, availableEvents = []) {
     
     const input = userInput.toLowerCase().trim();
     
-    // Greeting patterns
-    const greetingPatterns = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
-    if (greetingPatterns.some(pattern => input.includes(pattern))) {
-        console.log(`✅ [${requestId}] Detected greeting intent`);
-        return {
-            success: true,
-            data: {
-                intent: 'greeting',
-                event: null,
-                eventId: null,
-                tickets: null,
-                confidence: 'high',
-                message: 'Hello! I can help you book tickets for our events. Would you like to see available events?'
-            }
-        };
+    // Check for booking patterns first (before greeting)
+    const bookingPatterns = ['book', 'buy', 'purchase', 'get', 'reserve'];
+    const hasBookingIntent = bookingPatterns.some(pattern => input.includes(pattern));
+    
+    // Only check for greeting if no booking intent is detected
+    if (!hasBookingIntent) {
+        // Greeting patterns
+        const greetingPatterns = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
+        if (greetingPatterns.some(pattern => input.includes(pattern))) {
+            console.log(`✅ [${requestId}] Detected greeting intent`);
+            return {
+                success: true,
+                data: {
+                    intent: 'greeting',
+                    event: null,
+                    eventId: null,
+                    tickets: null,
+                    confidence: 'high',
+                    message: 'Hello! I can help you book tickets for our events. Would you like to see available events?'
+                }
+            };
+        }
     }
 
     // Show events patterns
@@ -287,9 +310,7 @@ async function fallbackParser(userInput, availableEvents = []) {
         };
     }
 
-    // Booking patterns
-    const bookingPatterns = ['book', 'buy', 'purchase', 'get', 'reserve'];
-    const hasBookingIntent = bookingPatterns.some(pattern => input.includes(pattern));
+    // Booking patterns (already checked above)
     
     if (hasBookingIntent) {
         console.log(`🎫 [${requestId}] Detected booking intent`);
@@ -299,15 +320,31 @@ async function fallbackParser(userInput, availableEvents = []) {
         const tickets = ticketMatch ? parseInt(ticketMatch[1] || ticketMatch[2] || ticketMatch[3]) : 1;
         console.log(`🔢 [${requestId}] Extracted ticket count: ${tickets}`);
 
-        // Try to match event name
+        // Try to match event name with improved matching
         let matchedEvent = null;
         let eventId = null;
         
         console.log(`🔍 [${requestId}] Searching for event match in ${availableEvents.length} events...`);
+        console.log(`🔍 [${requestId}] Available events:`, availableEvents.map(e => `"${e.name}" (ID: ${e.id})`));
+        
+        // Clean input for better matching
+        const cleanInput = input.replace(/book|buy|purchase|get|reserve|\d+|tickets?/g, '').trim();
+        console.log(`🔍 [${requestId}] Cleaned input for matching: "${cleanInput}"`);
+        
         for (const event of availableEvents) {
             const eventName = event.name.toLowerCase();
-            // Check for partial matches
-            if (input.includes(eventName) || eventName.includes(input.replace(/book|buy|purchase|get|reserve|\d+|tickets?/g, '').trim())) {
+            const eventWords = eventName.split(/\s+/);
+            
+            // Check for various matching patterns
+            const matches = [
+                input.includes(eventName),                    // Full event name in input
+                eventName.includes(cleanInput),               // Cleaned input in event name
+                cleanInput.includes(eventName),               // Event name in cleaned input
+                eventWords.some(word => cleanInput.includes(word) && word.length > 2), // Any event word in input
+                eventWords.some(word => input.includes(word) && word.length > 2)       // Any event word in original input
+            ];
+            
+            if (matches.some(match => match)) {
                 matchedEvent = event.name;
                 eventId = event.id;
                 console.log(`✅ [${requestId}] Found event match: "${matchedEvent}" (ID: ${eventId})`);
@@ -317,6 +354,7 @@ async function fallbackParser(userInput, availableEvents = []) {
 
         if (!matchedEvent) {
             console.log(`❌ [${requestId}] No event match found in fallback parser`);
+            console.log(`💡 [${requestId}] Try using keywords like: ${availableEvents.map(e => e.name.split(' ')[0]).join(', ')}`);
         }
 
         return {
@@ -357,6 +395,9 @@ async function fallbackParser(userInput, availableEvents = []) {
  * @returns {Object} - Chat response with message and actions
  */
 function generateChatResponse(parsedData, availableEvents = []) {
+    console.log(`🎭 [GENERATE_RESPONSE] Processing ${parsedData.intent} intent for event: "${parsedData.event}" (ID: ${parsedData.eventId})`);
+    console.log(`🎭 [GENERATE_RESPONSE] Available events: ${availableEvents.map(e => `"${e.name}" (ID: ${e.id})`).join(', ')}`);
+    
     const { intent, event, eventId, tickets, confidence } = parsedData;
 
     switch (intent) {
@@ -388,7 +429,13 @@ function generateChatResponse(parsedData, availableEvents = []) {
             };
 
         case 'booking':
+            console.log(`\n🎫 ===== BOOKING CASE STARTED =====`);
+            console.log(`🔍 [BOOKING] Checking booking request - Event: "${event}", EventId: ${eventId}, Tickets: ${tickets}`);
+            console.log(`🔍 [BOOKING] Available events:`, availableEvents.map(e => `${e.name} (ID: ${e.id})`));
+            console.log(`🎫 ===================================`);
+            
             if (!event || !eventId) {
+                console.log(`❌ [BOOKING] Missing event or eventId`);
                 return {
                     message: "I'd like to help you book tickets, but I need to know which event you're interested in. Please specify the event name.",
                     actions: ['show_events'],
@@ -396,12 +443,44 @@ function generateChatResponse(parsedData, availableEvents = []) {
                 };
             }
 
-            const targetEvent = availableEvents.find(e => e.id === eventId);
+            // Clean and sanitize the event data to ensure proper matching
+            const cleanEventId = parseInt(eventId);
+            const cleanEvent = event ? event.trim() : null;
+            
+            console.log(`🔍 [BOOKING] Raw inputs - EventId: ${eventId} (type: ${typeof eventId}), Event: "${event}"`);
+            console.log(`🔍 [BOOKING] Sanitized inputs - EventId: ${cleanEventId} (type: ${typeof cleanEventId}), Event: "${cleanEvent}"`);
+            console.log(`🔍 [BOOKING] Available events for lookup:`, availableEvents.map(e => `"${e.name}" (ID: ${e.id}, type: ${typeof e.id})`));
+            
+            // Try multiple lookup strategies
+            let targetEvent = availableEvents.find(e => e.id === cleanEventId);
+            
+            if (!targetEvent && cleanEvent) {
+                // Fallback: try finding by name if ID lookup fails
+                targetEvent = availableEvents.find(e => 
+                    e.name.toLowerCase().trim() === cleanEvent.toLowerCase().trim()
+                );
+                console.log(`🔄 [BOOKING] ID lookup failed, tried name lookup: ${targetEvent ? 'SUCCESS' : 'FAILED'}`);
+            }
+            
+            console.log(`� [BOOKING] Final target event result:`, targetEvent ? `Found "${targetEvent.name}" (ID: ${targetEvent.id})` : 'Not found');
+            
             if (!targetEvent) {
+                console.log(`❌ [BOOKING] Event with ID ${eventId} not found in available events`);
+                const debugInfo = {
+                    searchingFor: { eventId, type: typeof eventId },
+                    availableEvents: availableEvents.map(e => ({ id: e.id, type: typeof e.id, name: e.name })),
+                    comparisons: availableEvents.map(e => ({ 
+                        event: e.name, 
+                        strictMatch: e.id === eventId, 
+                        looseMatch: e.id == eventId 
+                    }))
+                };
+                const debugMessage = `DEBUG: eventId=${eventId}(${typeof eventId}), cleanEventId=${cleanEventId}(${typeof cleanEventId}), availableCount=${availableEvents.length}`;
                 return {
-                    message: `Sorry, I couldn't find an event called "${event}". Would you like to see available events?`,
+                    message: `Sorry, I couldn't find an event called "${event}". ${debugMessage}. Would you like to see available events?`,
                     actions: ['show_events'],
-                    requiresConfirmation: false
+                    requiresConfirmation: false,
+                    debug: debugInfo
                 };
             }
 
@@ -413,8 +492,26 @@ function generateChatResponse(parsedData, availableEvents = []) {
                 };
             }
 
+            // Return JSON formatted booking request without actually booking
+            const bookingRequest = {
+                action: "booking_request",
+                event_details: {
+                    event_id: eventId,
+                    event_name: event,
+                    event_date: targetEvent.date,
+                    tickets_requested: tickets,
+                    tickets_available: targetEvent.tickets,
+                    price_per_ticket: targetEvent.price || "TBD"
+                },
+                request_summary: `Book ${tickets} ticket${tickets > 1 ? 's' : ''} for "${event}"`,
+                confirmation_required: true,
+                timestamp: new Date().toISOString()
+            };
+
+            const humanReadableBooking = `📅 Event: ${event}\n🎫 Tickets: ${tickets}\n📍 Date: ${targetEvent.date}\n💰 Price: ${targetEvent.price || "TBD"} per ticket\n🎪 Available: ${targetEvent.tickets} tickets remaining`;
+            
             return {
-                message: `Great! I can book ${tickets} ticket${tickets > 1 ? 's' : ''} for "${event}" on ${targetEvent.date}.\n\nTotal tickets: ${tickets}\nEvent: ${event}\nDate: ${targetEvent.date}\n\nWould you like to confirm this booking?`,
+                message: `I've prepared your booking request:\n\n${humanReadableBooking}\n\nWould you like me to proceed with this booking?`,
                 actions: ['confirm_booking'],
                 requiresConfirmation: true,
                 bookingData: {
@@ -422,7 +519,8 @@ function generateChatResponse(parsedData, availableEvents = []) {
                     eventName: event,
                     tickets: tickets,
                     date: targetEvent.date
-                }
+                },
+                bookingRequest: bookingRequest
             };
 
         default:

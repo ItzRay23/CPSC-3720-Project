@@ -137,10 +137,8 @@ const confirmBooking = async (req, res) => {
             success: true,
             message: `Successfully booked ${tickets} ticket${tickets > 1 ? 's' : ''} for ${bookingResult.event.name}!`,
             booking: {
-                eventId: eventId,
-                eventName: bookingResult.event.name,
-                tickets: tickets,
-                remainingTickets: bookingResult.event.tickets
+                event: bookingResult.event.name,
+                tickets: tickets
             }
         };
         
