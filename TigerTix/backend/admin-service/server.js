@@ -1,3 +1,11 @@
+/**
+ * @fileoverview Admin microservice server
+ * Handles administrative operations for events
+ */
+
+// Load environment variables from parent directory
+require('dotenv').config({ path: '../.env' });
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
