@@ -36,3 +36,45 @@ export async function purchaseEvent(id) {
   }
   return res.json();
 }
+
+/**
+ * @function sendChatMessage
+ * @description Sends a chat message to the LLM booking assistant
+ * @param {string} message - User's message
+ * @returns {Promise<Object>} - Resolves with parsed intent and response
+ */
+export async function sendChatMessage(message) {
+  const res = await fetch(`${API_BASE}/api/llm/parse`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ message })
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Chat request failed (${res.status})`);
+  }
+  
+  return res.json();
+}
+
+/**
+ * @function confirmBooking
+ * @description Confirms a booking with the backend
+ * @param {Object} bookingData - Booking details {eventId, tickets}
+ * @returns {Promise<Object>} - Resolves with booking confirmation
+ */
+export async function confirmBooking(bookingData) {
+  const res = await fetch(`${API_BASE}/api/llm/confirm-booking`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(bookingData)
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Booking confirmation failed (${res.status})`);
+  }
+  
+  return res.json();
+}

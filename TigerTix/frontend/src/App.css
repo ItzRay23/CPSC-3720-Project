@@ -6,11 +6,67 @@
   padding-bottom: 2rem;
 }
 
+.app-header {
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
 .App h1 {
-  margin-top: 2rem;
+  margin: 0 0 1rem 0;
   font-size: 2.5rem;
   color: #c65308;
   letter-spacing: 2px;
+}
+
+.app-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.nav-btn {
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+.nav-btn.active {
+  background: #c65308;
+  color: white;
+  border-color: #c65308;
+}
+
+.nav-btn.active:hover {
+  background: #a14206;
+  border-color: #a14206;
+}
+
+.app-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.view-container h2 {
+  color: #333;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
 }
 
 .event-list {
