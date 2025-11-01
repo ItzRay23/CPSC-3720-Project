@@ -100,7 +100,7 @@ const ChatAssistant = () => {
       const confirmationMessage = {
         id: Date.now(),
         type: 'assistant',
-        text: response.message + "\n\nIs there anything else I can help you with?",
+        text: JSON.stringify(response, null, 2),
         timestamp: new Date()
       };
 
