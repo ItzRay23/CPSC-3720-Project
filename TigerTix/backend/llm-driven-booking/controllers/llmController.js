@@ -2,7 +2,7 @@
  * @fileoverview LLM Controller for handling natural language booking requests
  */
 
-const { parseBookingRequest, generateChatResponse, getAllEvents } = require('../models/llmModel');
+const { parseBookingRequest, generateChatResponse, getAllEvents, purchaseTicketsFromClient } = require('../models/llmModel');
 
 /**
  * @function parseLLMRequest
@@ -12,31 +12,56 @@ const { parseBookingRequest, generateChatResponse, getAllEvents } = require('../
  * @returns {void}
  */
 const parseLLMRequest = async (req, res) => {
+    const requestId = Math.random().toString(36).substr(2, 9);
+    const startTime = Date.now();
+    
+    console.log(`\n🚀 [${requestId}] NEW LLM REQUEST received at ${new Date().toISOString()}`);
+    console.log(`📝 [${requestId}] Request body:`, JSON.stringify(req.body, null, 2));
+    
     try {
         const { message } = req.body;
 
         if (!message || typeof message !== 'string' || message.trim().length === 0) {
+            console.log(`❌ [${requestId}] VALIDATION FAILED: Empty or invalid message`);
             return res.status(400).json({
                 success: false,
                 error: 'Message is required and must be a non-empty string'
             });
         }
 
+        console.log(`📨 [${requestId}] Processing message: "${message}"`);
+        
         // Get available events for context
+        console.log(`🎫 [${requestId}] Fetching available events...`);
         const availableEvents = await getAllEvents();
+        console.log(`✅ [${requestId}] Found ${availableEvents.length} events in database`);
         
         // Parse the user's message using LLM
+        console.log(`🤖 [${requestId}] Sending to LLM for parsing...`);
         const parseResult = await parseBookingRequest(message, availableEvents);
         
         if (!parseResult.success) {
+            console.log(`❌ [${requestId}] LLM PARSING FAILED`);
             return res.status(500).json({
                 success: false,
                 error: 'Failed to parse the request'
             });
         }
 
+        console.log(`✅ [${requestId}] LLM parsing successful:`, JSON.stringify(parseResult.data, null, 2));
+
         // Generate appropriate chat response
+        console.log(`💬 [${requestId}] Generating chat response...`);
         const chatResponse = generateChatResponse(parseResult.data, availableEvents);
+        console.log(`✅ [${requestId}] Chat response generated`);
+
+        const processingTime = Date.now() - startTime;
+        console.log(`🎉 [${requestId}] REQUEST COMPLETED in ${processingTime}ms`);
+        console.log(`📤 [${requestId}] Sending response:`, JSON.stringify({
+            success: true,
+            parsed: parseResult.data,
+            response: chatResponse
+        }, null, 2));
 
         return res.json({
             success: true,
@@ -45,7 +70,9 @@ const parseLLMRequest = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error in parseLLMRequest:', error);
+        const processingTime = Date.now() - startTime;
+        console.error(`💥 [${requestId}] ERROR after ${processingTime}ms:`, error);
+        console.error(`🔍 [${requestId}] Error stack:`, error.stack);
         res.status(500).json({
             success: false,
             error: 'Internal server error while processing your request'
@@ -61,10 +88,17 @@ const parseLLMRequest = async (req, res) => {
  * @returns {void}
  */
 const confirmBooking = async (req, res) => {
+    const requestId = Math.random().toString(36).substr(2, 9);
+    const startTime = Date.now();
+    
+    console.log(`\n🎫 [${requestId}] BOOKING CONFIRMATION started at ${new Date().toISOString()}`);
+    console.log(`📝 [${requestId}] Booking request:`, JSON.stringify(req.body, null, 2));
+    
     const { eventId, tickets } = req.body;
 
     // Validate input
     if (!eventId || !Number.isInteger(eventId) || eventId <= 0) {
+        console.log(`❌ [${requestId}] VALIDATION FAILED: Invalid event ID (${eventId})`);
         return res.status(400).json({
             success: false,
             error: 'Valid event ID is required'
@@ -72,21 +106,34 @@ const confirmBooking = async (req, res) => {
     }
 
     if (!tickets || !Number.isInteger(tickets) || tickets <= 0) {
+        console.log(`❌ [${requestId}] VALIDATION FAILED: Invalid ticket count (${tickets})`);
         return res.status(400).json({
             success: false,
             error: 'Valid number of tickets is required'
         });
     }
 
+    console.log(`✅ [${requestId}] Validation passed - Event ID: ${eventId}, Tickets: ${tickets}`);
+
     try {
-        // Begin transaction-safe booking process
-        const bookingResult = await processBookingWithTransaction(eventId, tickets);
+        // Purchase tickets through client service
+        console.log(`🔄 [${requestId}] Purchasing tickets via client service...`);
+        const bookingResult = await purchaseTicketsFromClient(eventId, tickets);
         
         if (!bookingResult.success) {
-            return res.status(400).json(bookingResult);
+            console.log(`❌ [${requestId}] BOOKING FAILED:`, bookingResult.error);
+            return res.status(400).json({
+                success: false,
+                error: bookingResult.error || 'Failed to complete booking'
+            });
         }
 
-        return res.json({
+        const processingTime = Date.now() - startTime;
+        console.log(`🎉 [${requestId}] BOOKING SUCCESSFUL in ${processingTime}ms`);
+        console.log(`✅ [${requestId}] Booked ${tickets} tickets for "${bookingResult.event.name}"`);
+        console.log(`📊 [${requestId}] Remaining tickets: ${bookingResult.event.tickets}`);
+        
+        const response = {
             success: true,
             message: `Successfully booked ${tickets} ticket${tickets > 1 ? 's' : ''} for ${bookingResult.event.name}!`,
             booking: {
@@ -95,10 +142,15 @@ const confirmBooking = async (req, res) => {
                 tickets: tickets,
                 remainingTickets: bookingResult.event.tickets
             }
-        });
+        };
+        
+        console.log(`📤 [${requestId}] Sending booking confirmation:`, JSON.stringify(response, null, 2));
+        return res.json(response);
 
     } catch (error) {
-        console.error('Error in confirmBooking:', error);
+        const processingTime = Date.now() - startTime;
+        console.error(`💥 [${requestId}] BOOKING ERROR after ${processingTime}ms:`, error);
+        console.error(`🔍 [${requestId}] Error stack:`, error.stack);
         res.status(500).json({
             success: false,
             error: 'Failed to process booking'
@@ -106,96 +158,7 @@ const confirmBooking = async (req, res) => {
     }
 };
 
-/**
- * @function processBookingWithTransaction
- * @description Processes booking with SQLite transaction safety to prevent overselling
- * @param {number} eventId - Event ID to book
- * @param {number} ticketsToBook - Number of tickets to book
- * @returns {Promise<Object>} - Booking result with success status
- */
-async function processBookingWithTransaction(eventId, ticketsToBook) {
-    const sqlite3 = require('sqlite3').verbose();
-    const path = require('path');
-    
-    // Connect to database
-    const dbPath = path.join(__dirname, '../../shared-db/database.sqlite');
-    const db = new sqlite3.Database(dbPath);
 
-    return new Promise((resolve, reject) => {
-        // Begin transaction
-        db.serialize(() => {
-            db.run('BEGIN TRANSACTION', (err) => {
-                if (err) {
-                    console.error('Failed to begin transaction:', err);
-                    return reject(err);
-                }
-
-                // Get current event state
-                db.get('SELECT * FROM events WHERE id = ?', [eventId], (err, event) => {
-                    if (err) {
-                        console.error('Error fetching event:', err);
-                        db.run('ROLLBACK');
-                        return resolve({
-                            success: false,
-                            error: 'Database error while fetching event'
-                        });
-                    }
-
-                    if (!event) {
-                        db.run('ROLLBACK');
-                        return resolve({
-                            success: false,
-                            error: 'Event not found'
-                        });
-                    }
-
-                    // Check ticket availability
-                    if (event.tickets < ticketsToBook) {
-                        db.run('ROLLBACK');
-                        return resolve({
-                            success: false,
-                            error: `Only ${event.tickets} tickets available, but ${ticketsToBook} requested`
-                        });
-                    }
-
-                    // Update ticket count
-                    const newTicketCount = event.tickets - ticketsToBook;
-                    db.run('UPDATE events SET tickets = ? WHERE id = ?', [newTicketCount, eventId], function(err) {
-                        if (err) {
-                            console.error('Error updating tickets:', err);
-                            db.run('ROLLBACK');
-                            return resolve({
-                                success: false,
-                                error: 'Failed to update ticket count'
-                            });
-                        }
-
-                        // Commit transaction
-                        db.run('COMMIT', (err) => {
-                            if (err) {
-                                console.error('Failed to commit transaction:', err);
-                                db.run('ROLLBACK');
-                                return resolve({
-                                    success: false,
-                                    error: 'Failed to complete booking'
-                                });
-                            }
-
-                            // Success - return updated event
-                            resolve({
-                                success: true,
-                                event: {
-                                    ...event,
-                                    tickets: newTicketCount
-                                }
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    });
-}
 
 /**
  * @function getChatHistory

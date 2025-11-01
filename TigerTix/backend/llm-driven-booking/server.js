@@ -3,49 +3,30 @@
  * Handles natural language processing for ticket booking
  */
 
-// Load environment variables from parent directory
-require('dotenv').config({ path: '../.env' });
+const path = require('path');
+
+// Load environment variables from backend directory
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-const sqlite3 = require('sqlite3').verbose();
 const llmRoutes = require('./routes/llmRoutes');
 
-// Database initialization
-const setupDatabase = () => {
-    return new Promise((resolve, reject) => {
-        const DB_PATH = path.join(__dirname, '../shared-db/database.sqlite');
-        const INIT_SQL_PATH = path.join(__dirname, '../shared-db/init.sqlite');
-
-        console.log('Setting up database for LLM service...');
-        
-        // Create database connection
-        const db = new sqlite3.Database(DB_PATH);
-        
-        // Read and execute the initialization SQL
-        try {
-            const initSql = fs.readFileSync(INIT_SQL_PATH, 'utf-8');
-            db.exec(initSql, (err) => {
-                if (err) {
-                    db.close();
-                    reject(new Error(`Failed to initialize database: ${err.message}`));
-                    return;
-                }
-                console.log('Database tables verified for LLM service');
-                db.close(() => resolve());
-            });
-        } catch (err) {
-            db.close();
-            reject(new Error(`Failed to read init.sqlite: ${err.message}`));
-        }
+// Service initialization - no database needed as we communicate with client service
+const setupService = () => {
+    return new Promise((resolve) => {
+        console.log('Setting up LLM service...');
+        console.log('LLM service will communicate with client service for data operations');
+        resolve();
     });
 };
 
 // Express app setup
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://localhost:6001'], // Allow frontend and client service
+    credentials: true
+}));
 app.use(express.json());
 
 // Health check endpoint
@@ -62,12 +43,12 @@ app.use('/api/llm', llmRoutes);
 
 const PORT = process.env.PORT || 5003;
 
-// Start server after database is initialized
-setupDatabase()
+// Start server after service is initialized
+setupService()
     .then(() => {
         app.listen(PORT, () => {
-            console.log(`LLM-driven booking service running at http://localhost:${PORT}`);
-            console.log(`Database verified for LLM service`);
+            console.log(`🤖 LLM-driven booking service running at http://localhost:${PORT}`);
+            console.log(`🔗 Client service communication target: http://localhost:6001`);
             console.log('Available endpoints:');
             console.log('  POST /api/llm/parse - Parse natural language booking requests');
             console.log('  POST /api/llm/confirm-booking - Confirm and process bookings');

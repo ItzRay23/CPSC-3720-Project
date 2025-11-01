@@ -8,12 +8,19 @@
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["tickets", "booking", "llm", "ai"],
+  "keywords": [
+    "tickets",
+    "booking",
+    "llm",
+    "ai"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5",
+    "node-fetch": "^2.7.0",
     "openai": "^4.24.0",
     "sqlite3": "^5.1.6"
   },
