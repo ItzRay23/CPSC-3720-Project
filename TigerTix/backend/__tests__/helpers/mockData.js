@@ -156,7 +156,7 @@ const validTestInputs = {
   createEvent: {
     name: 'Test Event',
     description: 'A test event for unit testing',
-    date: '2024-12-01',
+    date: '2025-12-01',
     time: '18:00',
     location: 'Test Venue',
     total_tickets: 100,
@@ -195,17 +195,17 @@ const invalidTestInputs = {
       date: 'invalid-date',
       time: '18:00',
       location: 'Test Venue',
-      total_tickets: 100,
+      tickets: 100,
       price: 20.00
     },
     
     negative_tickets: {
       name: 'Test Event',
       description: 'Event with negative tickets',
-      date: '2024-12-01',
+      date: '2025-12-01',
       time: '18:00',
       location: 'Test Venue',
-      total_tickets: -10,
+      tickets: -10,
       price: 20.00
     }
   },
