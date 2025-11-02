@@ -274,7 +274,8 @@ export const speakGreeting = async (userName = '') => {
  * @param {string} error - Error message
  */
 export const speakError = async (error) => {
-  const message = `Sorry, there was an error: ${error}`;
+  const cleanError = removeEmojisAndSymbols(error);
+  const message = `Sorry, there was an error: ${cleanError}`;
   return speakText(message, { type: VOICE_TYPES.ERROR });
 };
 
@@ -283,7 +284,8 @@ export const speakError = async (error) => {
  * @param {string} action - Action that was completed
  */
 export const speakConfirmation = async (action) => {
-  const message = `${action} completed successfully.`;
+  const cleanAction = removeEmojisAndSymbols(action);
+  const message = `${cleanAction} completed successfully.`;
   return speakText(message, { type: VOICE_TYPES.NOTIFICATION });
 };
 
@@ -300,12 +302,56 @@ export const speakStatus = async (status) => {
     keyword_detected: 'Keyword detected, continuing to listen'
   };
   
-  const message = statusMessages[status] || status;
+  const message = statusMessages[status] || removeEmojisAndSymbols(status);
   return speakText(message, { 
     type: VOICE_TYPES.SYSTEM,
     volume: 0.5,
     rate: 1.0
   });
+};
+
+/**
+ * Convert newlines to natural speech pauses using punctuation
+ * @param {string} text - Text with newlines
+ * @returns {string} Text with punctuation for natural TTS pauses
+ */
+export const convertNewlinesToPauses = (text) => {
+  return text
+    .replace(/\n\s*•\s*/g, '. ')         // Convert bullet points to periods for natural pauses
+    .replace(/\n\s*\d+\.\s*/g, '. ')     // Convert numbered lists to periods
+    .replace(/\n\s*-\s*/g, '. ')         // Convert dashes to periods
+    .replace(/\n{2,}/g, '. ')            // Convert multiple newlines to periods (paragraph breaks)
+    .replace(/\n/g, ', ')                // Convert single newlines to commas (short pauses)
+    .replace(/[.,]{2,}/g, '.')           // Clean up multiple punctuation marks
+    .replace(/,\s*\./g, '.')             // Clean up comma-period combinations
+    .replace(/\s+/g, ' ')                // Normalize whitespace
+    .trim();
+};
+
+/**
+ * Remove emojis and other symbols that TTS shouldn't read
+ * @param {string} text - Text to clean
+ * @returns {string} Text without emojis
+ */
+export const removeEmojisAndSymbols = (text) => {
+  return text
+    // Remove emojis (comprehensive Unicode ranges)
+    .replace(/[\u{1f600}-\u{1f64f}]/gu, '') // Emoticons
+    .replace(/[\u{1f300}-\u{1f5ff}]/gu, '') // Misc symbols
+    .replace(/[\u{1f680}-\u{1f6ff}]/gu, '') // Transport & map symbols
+    .replace(/[\u{1f1e0}-\u{1f1ff}]/gu, '') // Regional indicators (flags)
+    .replace(/[\u{2600}-\u{26ff}]/gu, '')   // Misc symbols
+    .replace(/[\u{2700}-\u{27bf}]/gu, '')   // Dingbats
+    .replace(/[\u{1f900}-\u{1f9ff}]/gu, '') // Supplemental symbols
+    .replace(/[\u{1f018}-\u{1f270}]/gu, '') // Various symbols
+    // Remove common symbols that sound awkward in TTS
+    .replace(/[•◦▪▫▸▹►▻‣⁃]/g, '')      // Bullet points
+    .replace(/[→←↑↓↔]/g, '')             // Arrows
+    .replace(/[★☆✓✗✘]/g, '')            // Stars and checkmarks
+    .replace(/[™®©]/g, '')               // Trademark symbols
+    // Clean up extra spaces
+    .replace(/\s+/g, ' ')
+    .trim();
 };
 
 /**
@@ -322,9 +368,13 @@ export const speakAssistantResponse = async (response, options = {}) => {
     .replace(/\*(.*?)\*/g, '$1')     // Remove italic markdown
     .replace(/`(.*?)`/g, '$1')       // Remove code markdown
     .replace(/#{1,6}\s/g, '')        // Remove headers
-    .replace(/\n+/g, ' ')            // Replace newlines with spaces
-    .replace(/\s+/g, ' ')            // Normalize whitespace
     .trim();
+    
+  // Convert newlines to natural pauses
+  cleanResponse = convertNewlinesToPauses(cleanResponse);
+    
+  // Remove emojis and symbols that TTS shouldn't read
+  cleanResponse = removeEmojisAndSymbols(cleanResponse);
     
   // Limit length for TTS (too long responses can be overwhelming)
   if (cleanResponse.length > 500) {
