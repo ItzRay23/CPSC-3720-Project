@@ -1,43 +1,54 @@
-// frontend/src/App.js
-import React, { useState } from "react";
-import "./App.css";
+
+import React, { useState } from 'react';
+import './App.css';
 import "./a11y.css";
-
 import EventList from "./components/EventList";
-import VoiceChat from "./components/VoiceChat";
+import ChatAssistant from "./components/ChatAssistant";
 
-export default function App() {
-  const [activeView, setActiveView] = useState("events"); // 'events' | 'voice'
+/**
+ * @component App
+ * @description Main application component with LLM booking assistant.
+ * @returns {JSX.Element}
+ */
+function App() {
+	const [activeView, setActiveView] = useState('events');
 
-  return (
-    <div className="App">
-      <header className="app-header">
-        <h1>🎟️ Tiger Tix</h1>
+	return (
+		<div className="App">
+			<header className="app-header">
+				<h1>🎫 Tiger Tix</h1>
+				<nav className="app-nav">
+					<button 
+						className={`nav-btn ${activeView === 'events' ? 'active' : ''}`}
+						onClick={() => setActiveView('events')}
+					>
+						📅 Events
+					</button>
+					<button 
+						className={`nav-btn ${activeView === 'chat' ? 'active' : ''}`}
+						onClick={() => setActiveView('chat')}
+					>
+						🤖 Book with AI
+					</button>
+				</nav>
+			</header>
 
-        <nav className="tabbar" aria-label="Primary">
-          <button
-            type="button"
-            onClick={() => setActiveView("events")}
-            className={`tab ${activeView === "events" ? "tab--active" : ""}`}
-            aria-pressed={activeView === "events"}
-          >
-            🗓️ Events
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveView("voice")}
-            className={`tab ${activeView === "voice" ? "tab--active" : ""}`}
-            aria-pressed={activeView === "voice"}
-          >
-            🤖 Book with AI
-          </button>
-        </nav>
-      </header>
-
-      <main className="app-main">
-        {activeView === "events" ? <EventList /> : <VoiceChat />}
-      </main>
-    </div>
-  );
+			<main className="app-main">
+				{activeView === 'events' && (
+					<div className="view-container">
+						<h2>Available Events</h2>
+						<EventList />
+					</div>
+				)}
+				
+				{activeView === 'chat' && (
+					<div className="view-container">
+						<ChatAssistant />
+					</div>
+				)}
+			</main>
+		</div>
+	);
 }
+
+export default App;
