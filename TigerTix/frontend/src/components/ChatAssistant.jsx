@@ -6,6 +6,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { sendChatMessage, confirmBooking } from '../api';
+import VoiceInput from './VoiceInput/VoiceInput';
+import EnhancedVoiceInput from './VoiceInput/EnhancedVoiceInput';
+import { 
+  speakAssistantResponse, 
+  speakError, 
+  stopSpeaking,
+  isTextToSpeechSupported
+} from '../utils/textToSpeechUtils';
 import './ChatAssistant.css';
 
 const ChatAssistant = () => {
@@ -20,6 +28,9 @@ const ChatAssistant = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingBooking, setPendingBooking] = useState(null);
+  const [useEnhancedVoice, setUseEnhancedVoice] = useState(true);
+  const [voiceFeedbackEnabled, setVoiceFeedbackEnabled] = useState(false);
+  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -27,6 +38,60 @@ const ChatAssistant = () => {
   };
 
   useEffect(scrollToBottom, [messages]);
+
+  /**
+   * @function handleVoiceInput
+   * @description Handles voice input from the VoiceInput component
+   * @param {string} transcript - The voice input transcript
+   * @param {Object} options - Voice input options
+   * @returns {void}
+   */
+  const handleVoiceInput = (transcript, options = {}) => {
+    if (transcript && transcript.trim()) {
+      setInputValue(transcript);
+      
+      // Auto-send if specified in options or enhanced voice mode
+      if (options.autoSend && options.confidence >= 0.6) {
+        setTimeout(() => {
+          handleSendMessage();
+        }, 500); // Small delay to show user the transcript
+      }
+    }
+  };
+
+  /**
+   * @function handleTTSToggle
+   * @description Toggles text-to-speech feedback
+   * @returns {void}
+   */
+  const handleTTSToggle = () => {
+    if (isVoiceSpeaking) {
+      stopSpeaking();
+      setIsVoiceSpeaking(false);
+    }
+    setVoiceFeedbackEnabled(!voiceFeedbackEnabled);
+  };
+
+  /**
+   * @function speakResponse
+   * @description Speaks assistant response if TTS is enabled
+   * @param {string} text - Text to speak
+   * @returns {Promise<void>}
+   */
+  const speakResponse = async (text) => {
+    if (!voiceFeedbackEnabled || !isTextToSpeechSupported()) return;
+    
+    try {
+      setIsVoiceSpeaking(true);
+      await speakAssistantResponse(text, {
+        onEnd: () => setIsVoiceSpeaking(false),
+        onError: () => setIsVoiceSpeaking(false)
+      });
+    } catch (error) {
+      console.error('TTS Error:', error);
+      setIsVoiceSpeaking(false);
+    }
+  };
 
   /**
    * @function handleSendMessage
@@ -62,6 +127,9 @@ const ChatAssistant = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
+      // Speak the response if TTS is enabled
+      await speakResponse(response.response.message);
+
       // Set pending booking if confirmation is required
       if (response.response.requiresConfirmation && response.response.bookingData) {
         setPendingBooking(response.response.bookingData);
@@ -76,6 +144,9 @@ const ChatAssistant = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      
+      // Speak error message if TTS is enabled
+      await speakError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -160,8 +231,30 @@ const ChatAssistant = () => {
   return (
     <div className="chat-assistant">
       <div className="chat-header">
-        <h3>🤖 TigerTix Booking Assistant</h3>
-        <p>Ask me to show events or book tickets using natural language!</p>
+        <div className="chat-header-content">
+          <div className="chat-title">
+            <h3>🤖 TigerTix Booking Assistant</h3>
+            <p>Ask me to show events or book tickets using natural language!</p>
+          </div>
+          <div className="chat-controls">
+            <button
+              className={`voice-toggle ${useEnhancedVoice ? 'active' : ''}`}
+              onClick={() => setUseEnhancedVoice(!useEnhancedVoice)}
+              title="Toggle enhanced voice features"
+            >
+              {useEnhancedVoice ? '🎤+' : '🎤'}
+            </button>
+            {isTextToSpeechSupported() && (
+              <button
+                className={`tts-toggle ${voiceFeedbackEnabled ? 'active' : ''} ${isVoiceSpeaking ? 'speaking' : ''}`}
+                onClick={handleTTSToggle}
+                title={voiceFeedbackEnabled ? 'Disable voice feedback' : 'Enable voice feedback'}
+              >
+                {isVoiceSpeaking ? '🔊' : voiceFeedbackEnabled ? '🔊' : '🔇'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
       
       <div className="chat-messages">
@@ -244,6 +337,19 @@ const ChatAssistant = () => {
             disabled={isLoading}
             rows={1}
           />
+          {useEnhancedVoice ? (
+            <EnhancedVoiceInput 
+              onVoiceInput={handleVoiceInput}
+              disabled={isLoading}
+              className="voice-input--chat"
+            />
+          ) : (
+            <VoiceInput 
+              onVoiceInput={handleVoiceInput}
+              disabled={isLoading}
+              className="voice-input--chat"
+            />
+          )}
           <button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
@@ -254,7 +360,7 @@ const ChatAssistant = () => {
         </div>
         
         <div className="chat-examples">
-          <small>Try: "Show events", "Book 2 tickets for Jazz Night", "What events are available?"</small>
+          <small>Try: "Show events", "Book 2 tickets for Jazz Night", "What events are available?" | 🎤 Click the microphone to speak</small>
         </div>
       </div>
     </div>

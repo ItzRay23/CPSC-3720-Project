@@ -17,18 +17,80 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 16px 20px;
+}
+
+.chat-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chat-title {
+  flex: 1;
   text-align: center;
 }
 
-.chat-header h3 {
+.chat-title h3 {
   margin: 0 0 8px 0;
   font-size: 1.4em;
 }
 
-.chat-header p {
+.chat-title p {
   margin: 0;
   font-size: 0.9em;
   opacity: 0.9;
+}
+
+.chat-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.voice-toggle,
+.tts-toggle {
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.voice-toggle:hover,
+.tts-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.voice-toggle.active,
+.tts-toggle.active {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.tts-toggle.speaking {
+  animation: speakingPulse 1s infinite;
+}
+
+@keyframes speakingPulse {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+  }
 }
 
 .chat-messages {
@@ -215,8 +277,10 @@
 .input-container {
   display: flex;
   gap: 12px;
-  align-items: flex-end;
+  align-items: center;
 }
+
+/* Voice Input Integration - Voice button inherits styles from EnhancedVoiceInput.css */
 
 .input-container textarea {
   flex: 1;
@@ -248,11 +312,15 @@
   color: white;
   border: none;
   border-radius: 20px;
-  padding: 10px 20px;
+  padding: 0 20px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .send-btn:hover:not(:disabled) {

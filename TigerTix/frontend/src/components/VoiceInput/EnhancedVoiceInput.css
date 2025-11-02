@@ -1,0 +1,74 @@
+/**
+ * Simple Voice Button Styles - Matching Send Button
+ */
+
+.voice-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 0 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-size: 16px;
+  min-width: 60px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-btn:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.voice-btn:disabled,
+.voice-btn--disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.voice-btn--listening {
+  background: #dc3545;
+  animation: pulseListening 1s infinite;
+}
+
+.voice-btn--listening:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.voice-btn--processing {
+  background: #ffc107;
+  color: #212529;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulseListening {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .voice-btn--listening,
+  .voice-btn--processing {
+    animation: none;
+  }
+  
+  .voice-btn {
+    transition: none;
+  }
+}
