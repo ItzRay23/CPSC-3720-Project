@@ -96,29 +96,34 @@ const confirmBooking = async (req, res) => {
     
     const { eventId, tickets } = req.body;
 
-    // Validate input
-    if (!eventId || !Number.isInteger(eventId) || eventId <= 0) {
-        console.log(`❌ [${requestId}] VALIDATION FAILED: Invalid event ID (${eventId})`);
+    // Convert and validate inputs (handle both string and number inputs)
+    const parsedEventId = parseInt(eventId);
+    const parsedTickets = parseInt(tickets);
+
+    // Validate event ID
+    if (!eventId || isNaN(parsedEventId) || parsedEventId <= 0) {
+        console.log(`❌ [${requestId}] VALIDATION FAILED: Invalid event ID (${eventId}) -> parsed: ${parsedEventId}`);
         return res.status(400).json({
             success: false,
             error: 'Valid event ID is required'
         });
     }
 
-    if (!tickets || !Number.isInteger(tickets) || tickets <= 0) {
-        console.log(`❌ [${requestId}] VALIDATION FAILED: Invalid ticket count (${tickets})`);
+    // Validate ticket count  
+    if (!tickets || isNaN(parsedTickets) || parsedTickets <= 0) {
+        console.log(`❌ [${requestId}] VALIDATION FAILED: Invalid ticket count (${tickets}) -> parsed: ${parsedTickets}`);
         return res.status(400).json({
             success: false,
             error: 'Valid number of tickets is required'
         });
     }
 
-    console.log(`✅ [${requestId}] Validation passed - Event ID: ${eventId}, Tickets: ${tickets}`);
+    console.log(`✅ [${requestId}] Validation passed - Event ID: ${parsedEventId}, Tickets: ${parsedTickets}`);
 
     try {
         // Purchase tickets through client service
         console.log(`🔄 [${requestId}] Purchasing tickets via client service...`);
-        const bookingResult = await purchaseTicketsFromClient(eventId, tickets);
+        const bookingResult = await purchaseTicketsFromClient(parsedEventId, parsedTickets);
         
         if (!bookingResult.success) {
             console.log(`❌ [${requestId}] BOOKING FAILED:`, bookingResult.error);
@@ -130,16 +135,12 @@ const confirmBooking = async (req, res) => {
 
         const processingTime = Date.now() - startTime;
         console.log(`🎉 [${requestId}] BOOKING SUCCESSFUL in ${processingTime}ms`);
-        console.log(`✅ [${requestId}] Booked ${tickets} tickets for "${bookingResult.event.name}"`);
+        console.log(`✅ [${requestId}] Booked ${parsedTickets} tickets for "${bookingResult.event.name}"`);
         console.log(`📊 [${requestId}] Remaining tickets: ${bookingResult.event.tickets}`);
         
         const response = {
-            success: true,
-            message: `Successfully booked ${tickets} ticket${tickets > 1 ? 's' : ''} for ${bookingResult.event.name}!`,
-            booking: {
-                event: bookingResult.event.name,
-                tickets: tickets
-            }
+            event: bookingResult.event.name,
+            tickets: parsedTickets
         };
         
         console.log(`📤 [${requestId}] Sending booking confirmation:`, JSON.stringify(response, null, 2));
