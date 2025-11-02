@@ -169,3 +169,108 @@
     transform: rotate(360deg);
   }
 }
+
+.tabbar { display: flex; gap: 12px; justify-content: center; margin: 12px 0; }
+.tab { padding: 10px 16px; border-radius: 10px; border: 1px solid #ddd; background: #fff; }
+.tab--active { background: #e86713; color: #fff; border-color: #e86713; }
+.app-main { max-width: 1100px; margin: 0 auto; padding: 12px; }
+
+/* Voice Chat Layout */
+.voicechat {
+  max-width: 880px;
+  margin: 24px auto 48px;
+  padding: 0 16px;
+}
+
+.vc-card {
+  background: #ffffff;
+  border: 1px solid #e9e9ef;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.vc-header {
+  padding: 16px 18px;
+  background: linear-gradient(180deg,#fff,#fafafc);
+  border-bottom: 1px solid #f0f0f6;
+  color: #4a4a55;
+  font-size: 14px;
+  text-align: center;
+}
+
+.vc-log {
+  height: 420px;
+  overflow-y: auto;
+  padding: 16px;
+  background: #f8f9fb;
+}
+
+.vc-row { display: flex; margin: 8px 0; }
+.vc-row.user   { justify-content: flex-end; }
+.vc-row.assist { justify-content: flex-start; }
+
+.vc-bubble {
+  max-width: 72%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  line-height: 1.35;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.vc-bubble.user   { background:#155e75; color:#fff; border-bottom-right-radius: 6px; }
+.vc-bubble.assist { background:#fff;   color:#21212a; border:1px solid #e7e7ee; border-bottom-left-radius: 6px; }
+
+.vc-footer {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: start;
+  padding: 14px;
+  background: #fff;
+  border-top: 1px solid #f0f0f6;
+}
+
+.vc-input {
+  min-height: 44px;
+  resize: vertical;
+  max-height: 140px;
+  padding: 10px 12px;
+  border: 1px solid #dfe1ea;
+  border-radius: 12px;
+  outline: none;
+  font-size: 14px;
+  background: #fafbfe;
+}
+.vc-input:focus { border-color: #e86713; box-shadow: 0 0 0 3px rgba(232,103,19,0.15); }
+
+.vc-btn {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #e3e4ec;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+.vc-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.vc-btn.primary {
+  background: #e86713;
+  color: #fff;
+  border-color: #e86713;
+}
+.vc-btn.mic    { background:#0ea5e9; color:#fff; border-color:#0ea5e9; }
+.vc-btn.record { background:#ef4444; color:#fff; border-color:#ef4444; }
+
+.vc-tip {
+  text-align: center;
+  color:#616173;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+/* nice scroll */
+.vc-log::-webkit-scrollbar { width: 10px; }
+.vc-log::-webkit-scrollbar-thumb { background: #d4d6de; border-radius: 8px; }

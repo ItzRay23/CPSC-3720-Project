@@ -1,54 +1,43 @@
-
-import React, { useState } from 'react';
-import './App.css';
+// frontend/src/App.js
+import React, { useState } from "react";
+import "./App.css";
 import "./a11y.css";
+
 import EventList from "./components/EventList";
-import ChatAssistant from "./components/ChatAssistant";
+import VoiceChat from "./components/VoiceChat";
 
-/**
- * @component App
- * @description Main application component with LLM booking assistant.
- * @returns {JSX.Element}
- */
-function App() {
-	const [activeView, setActiveView] = useState('events');
+export default function App() {
+  const [activeView, setActiveView] = useState("events"); // 'events' | 'voice'
 
-	return (
-		<div className="App">
-			<header className="app-header">
-				<h1>🎫 Tiger Tix</h1>
-				<nav className="app-nav">
-					<button 
-						className={`nav-btn ${activeView === 'events' ? 'active' : ''}`}
-						onClick={() => setActiveView('events')}
-					>
-						📅 Events
-					</button>
-					<button 
-						className={`nav-btn ${activeView === 'chat' ? 'active' : ''}`}
-						onClick={() => setActiveView('chat')}
-					>
-						🤖 Book with AI
-					</button>
-				</nav>
-			</header>
+  return (
+    <div className="App">
+      <header className="app-header">
+        <h1>🎟️ Tiger Tix</h1>
 
-			<main className="app-main">
-				{activeView === 'events' && (
-					<div className="view-container">
-						<h2>Available Events</h2>
-						<EventList />
-					</div>
-				)}
-				
-				{activeView === 'chat' && (
-					<div className="view-container">
-						<ChatAssistant />
-					</div>
-				)}
-			</main>
-		</div>
-	);
+        <nav className="tabbar" aria-label="Primary">
+          <button
+            type="button"
+            onClick={() => setActiveView("events")}
+            className={`tab ${activeView === "events" ? "tab--active" : ""}`}
+            aria-pressed={activeView === "events"}
+          >
+            🗓️ Events
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveView("voice")}
+            className={`tab ${activeView === "voice" ? "tab--active" : ""}`}
+            aria-pressed={activeView === "voice"}
+          >
+            🤖 Book with AI
+          </button>
+        </nav>
+      </header>
+
+      <main className="app-main">
+        {activeView === "events" ? <EventList /> : <VoiceChat />}
+      </main>
+    </div>
+  );
 }
-
-export default App;

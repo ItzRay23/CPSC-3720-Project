@@ -2,8 +2,11 @@
 
 // src/api.js
 // Service endpoints configuration
-const CLIENT_SERVICE_BASE = process.env.REACT_APP_CLIENT_API_BASE?.trim?.() || "http://localhost:6001";
-const LLM_SERVICE_BASE = process.env.REACT_APP_LLM_API_BASE?.trim?.() || "http://localhost:5003";
+const CLIENT_SERVICE_BASE = (process.env.REACT_APP_CLIENT_API_BASE ?? "").trim(); // "" => use CRA proxy
+const LLM_SERVICE_BASE = (process.env.REACT_APP_LLM_API_BASE ?? "").trim();       // set only if you really need it
+
+const api = (p) => `${CLIENT_SERVICE_BASE}${p}`;
+const llm = (p) => `${LLM_SERVICE_BASE || ""}${p}`;
 
   /**
  * @function fetchEvents
@@ -12,7 +15,7 @@ const LLM_SERVICE_BASE = process.env.REACT_APP_LLM_API_BASE?.trim?.() || "http:/
  */
 export async function fetchEvents() {
   console.log(`📡 Frontend: Fetching events from client service: ${CLIENT_SERVICE_BASE}/api/events`);
-  const res = await fetch(`${CLIENT_SERVICE_BASE}/api/events`, {
+  const res = await fetch(api("/api/events"), {
     headers: { Accept: "application/json" },
   });
   if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
@@ -30,7 +33,7 @@ export async function fetchEvents() {
  */
 export async function purchaseEvent(id) {
   console.log(`📡 Frontend: Purchasing ticket for event ${id} from client service`);
-  const res = await fetch(`${CLIENT_SERVICE_BASE}/api/events/${id}/purchase`, {
+  const res = await fetch(api(`/api/events/${id}/purchase`), {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
   });
@@ -51,7 +54,7 @@ export async function purchaseEvent(id) {
  */
 export async function sendChatMessage(message) {
   console.log(`📡 Frontend: Sending chat message to LLM service: "${message}"`);
-  const res = await fetch(`${LLM_SERVICE_BASE}/api/llm/parse`, {
+  const res = await fetch(llm("/api/llm/parse"), {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ message })
@@ -76,7 +79,7 @@ export async function sendChatMessage(message) {
  */
 export async function confirmBooking(bookingData) {
   console.log(`📡 Frontend: Confirming booking through LLM service:`, bookingData);
-  const res = await fetch(`${LLM_SERVICE_BASE}/api/llm/confirm-booking`, {
+  const res = await fetch(llm("/api/llm/confirm-booking"), {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(bookingData)
