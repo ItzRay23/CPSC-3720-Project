@@ -43,7 +43,6 @@
     "rimraf": "^6.0.1"
   },
   "jest": {
-    "preset": "jest-puppeteer",
     "testTimeout": 60000,
     "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
     "testMatch": [
