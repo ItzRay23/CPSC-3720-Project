@@ -1,0 +1,68 @@
+{
+  "name": "tigertix-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for TigerTix ticketing system",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:integration": "jest integration/ --verbose",
+    "test:browser": "jest browser/ --verbose",
+    "test:api": "jest integration/api-integration.test.js --verbose",
+    "test:system": "jest integration/full-system.test.js --verbose",
+    "test:frontend": "jest browser/frontend-e2e.test.js --verbose",
+    "test:journey": "jest browser/user-journey.test.js --verbose",
+    "test:all": "jest --verbose --detectOpenHandles",
+    "test:unit": "cd .. && npm test",
+    "start:services": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd ../backend && concurrently \"PORT=5002 node server.js\" \"PORT=6001 node server.js\" \"PORT=5003 node server.js\"",
+    "start:frontend": "cd ../frontend && npm start",
+    "test:with-services": "concurrently --kill-others --success first \"npm run start:services\" \"npm run wait-and-test\"",
+    "wait-and-test": "timeout 15 && npm test",
+    "health-check": "node -e \"console.log('🔍 Checking service health...'); require('axios').get('http://localhost:3000').then(() => console.log('✅ Frontend OK')).catch(() => console.log('❌ Frontend DOWN'))\"",
+    "posttest": "echo '✅ All E2E tests completed!'",
+    "clean": "rimraf node_modules package-lock.json",
+    "fresh-install": "npm run clean && npm install",
+    "test:integration-only": "jest integration/ --testPathIgnorePatterns=browser --verbose",
+    "test:api-only": "jest integration/api-integration.test.js --verbose --runInBand"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "puppeteer": "^23.5.0",
+    "cross-fetch": "^4.0.0",
+    "form-data": "^4.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-puppeteer": "^10.1.1",
+    "concurrently": "^9.0.1",
+    "@jest/globals": "^29.7.0",
+    "jest-environment-node": "^29.7.0",
+    "wait-port": "^1.1.0",
+    "supertest": "^7.0.0",
+    "rimraf": "^6.0.1"
+  },
+  "jest": {
+    "preset": "jest-puppeteer",
+    "testTimeout": 60000,
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "testMatch": [
+      "**/__tests__/**/*.(js|jsx|ts|tsx)",
+      "**/*.(test|spec).(js|jsx|ts|tsx)"
+    ],
+    "testEnvironment": "node",
+    "verbose": true,
+    "detectOpenHandles": true,
+    "forceExit": true,
+    "maxWorkers": 1
+  },
+  "keywords": [
+    "e2e",
+    "integration",
+    "testing",
+    "tigertix",
+    "ticketing"
+  ],
+  "author": "TigerTix Team",
+  "license": "MIT"
+}
