@@ -7,19 +7,19 @@ const router = express.Router();
  * Authentication Routes
  */
 
-// User Registration (13 pts) - /register route using Express
+// User Registration - /register route using Express
 router.post('/register', authController.register);
 
-// User Login (13 pts) - /login route using Express
+// User Login - /login route using Express
 router.post('/login', authController.login);
 
-// Token Verification (13 pts) - Verify JWT
+// Token Verification - Verify JWT
 router.get('/verify', authController.verifyToken);
 
-// Logout (7 pts) - Clear session state
+// Logout - Clear session state
 router.post('/logout', authController.logout);
 
-// Get Current User (7 pts) - Protected route with inline token verification
+// Get Current User - Protected route with inline token verification
 router.get('/me', authController.getCurrentUser);
 
 module.exports = router;
