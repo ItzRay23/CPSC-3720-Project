@@ -81,7 +81,7 @@ function Auth({ onLoginSuccess }) {
 					lastName: formData.lastName
 				};
 
-			const response = await fetch(`http://localhost:5002${endpoint}`, {
+			const response = await fetch(`http://localhost:5004${endpoint}`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

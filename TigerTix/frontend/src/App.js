@@ -22,7 +22,7 @@ function App() {
 			const token = localStorage.getItem('authToken');
 			if (token) {
 				try {
-					const response = await fetch('http://localhost:5002/api/auth/verify', {
+					const response = await fetch('http://localhost:5004/api/auth/verify', {
 						headers: {
 							'Authorization': `Bearer ${token}`
 						},
@@ -54,7 +54,7 @@ function App() {
 
 	const handleLogout = async () => {
 		try {
-			await fetch('http://localhost:5002/api/auth/logout', {
+			await fetch('http://localhost:5004/api/auth/logout', {
 				method: 'POST',
 				credentials: 'include'
 			});
