@@ -6,11 +6,87 @@ const request = require('supertest');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+
+// Mock the userModel before requiring routes/controllers
+jest.mock('../../models/userModel');
+
+const userModel = require('../../models/userModel');
+
+// In-memory test database
+const mockUsers = new Map();
+let nextUserId = 1;
 
 // Create Express app for testing
 let app;
 
 beforeAll(() => {
+  // Setup mock implementations
+  userModel.createUser.mockImplementation(async (email, password, firstName, lastName) => {
+    // Check if user exists
+    for (const [id, user] of mockUsers) {
+      if (user.email === email) {
+        throw new Error('User already exists');
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = {
+      id: nextUserId++,
+      email,
+      password_hash: hashedPassword,
+      first_name: firstName,
+      last_name: lastName,
+      created_at: new Date().toISOString()
+    };
+
+    mockUsers.set(newUser.id, newUser);
+
+    // Return without password_hash
+    return {
+      id: newUser.id,
+      email: newUser.email,
+      first_name: newUser.first_name,
+      last_name: newUser.last_name,
+      created_at: newUser.created_at
+    };
+  });
+
+  userModel.findByEmail.mockImplementation(async (email) => {
+    for (const [id, user] of mockUsers) {
+      if (user.email === email) {
+        return user;
+      }
+    }
+    return null;
+  });
+
+  userModel.findById.mockImplementation(async (id) => {
+    const user = mockUsers.get(id);
+    if (!user) {
+      return null;
+    }
+    // Return without password_hash
+    return {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      created_at: user.created_at
+    };
+  });
+
+  userModel.verifyPassword.mockImplementation(async (password, hashedPassword) => {
+    return await bcrypt.compare(password, hashedPassword);
+  });
+
+  userModel.updateLastLogin.mockImplementation(async (userId) => {
+    const user = mockUsers.get(userId);
+    if (user) {
+      user.last_login = new Date().toISOString();
+    }
+  });
+
   // Create test app
   app = express();
   app.use(express.json());
@@ -24,12 +100,14 @@ beforeAll(() => {
   app.use('/api/auth', authRoutes);
 });
 
+afterEach(() => {
+  // Clear mock users after each test to ensure test isolation
+  mockUsers.clear();
+  nextUserId = 1;
+});
+
 afterAll(() => {
-  // Clean up any database connections
-  const userModel = require('../../models/userModel');
-  if (userModel && userModel.closeConnection) {
-    userModel.closeConnection();
-  }
+  jest.clearAllMocks();
 });
 
 describe('User Authentication Service', () => {
@@ -97,8 +175,8 @@ describe('User Authentication Service', () => {
   });
 
   describe('POST /api/auth/login - User Login', () => {
-    beforeAll(async () => {
-      // Create a user for login tests
+    test('should login with valid credentials and return JWT token', async () => {
+      // First register a user
       const userData = {
         email: 'login@example.com',
         password: 'testPassword123',
@@ -109,9 +187,8 @@ describe('User Authentication Service', () => {
       await request(app)
         .post('/api/auth/register')
         .send(userData);
-    });
 
-    test('should login with valid credentials and return JWT token', async () => {
+      // Then login
       const loginData = {
         email: 'login@example.com',
         password: 'testPassword123'
@@ -152,8 +229,19 @@ describe('User Authentication Service', () => {
     });
 
     test('should return 401 for invalid password', async () => {
+      // First register a user
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'wrongpass@example.com',
+          password: 'correctPassword',
+          firstName: 'Test',
+          lastName: 'User'
+        });
+
+      // Try to login with wrong password
       const loginData = {
-        email: 'login@example.com',
+        email: 'wrongpass@example.com',
         password: 'wrongPassword'
       };
 
@@ -176,9 +264,7 @@ describe('User Authentication Service', () => {
   });
 
   describe('GET /api/auth/verify - Token Verification', () => {
-    let validToken;
-
-    beforeAll(async () => {
+    test('should verify valid JWT token', async () => {
       // Register and login to get a valid token
       await request(app)
         .post('/api/auth/register')
@@ -196,10 +282,8 @@ describe('User Authentication Service', () => {
           password: 'password123'
         });
 
-      validToken = loginResponse.body.token;
-    });
+      const validToken = loginResponse.body.token;
 
-    test('should verify valid JWT token', async () => {
       const response = await request(app)
         .get('/api/auth/verify')
         .set('Authorization', `Bearer ${validToken}`)
@@ -250,9 +334,7 @@ describe('User Authentication Service', () => {
   });
 
   describe('GET /api/auth/me - Get Current User', () => {
-    let validToken;
-
-    beforeAll(async () => {
+    test('should return current user data with valid token', async () => {
       // Register and login to get a valid token
       await request(app)
         .post('/api/auth/register')
@@ -270,10 +352,8 @@ describe('User Authentication Service', () => {
           password: 'password123'
         });
 
-      validToken = loginResponse.body.token;
-    });
+      const validToken = loginResponse.body.token;
 
-    test('should return current user data with valid token', async () => {
       const response = await request(app)
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${validToken}`)
