@@ -60,6 +60,10 @@ module.exports = {
     {
       displayName: 'llm-driven-booking',
       testMatch: ['<rootDir>/llm-driven-booking/**/__tests__/**/*.test.js']  
+    },
+    {
+      displayName: 'user-authentication',
+      testMatch: ['<rootDir>/user-authentication/**/__tests__/**/*.test.js']
     }
   ]
 };
