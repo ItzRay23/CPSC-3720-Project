@@ -11,6 +11,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   padding: 1rem 0;
   margin-bottom: 2rem;
+  position: relative;
 }
 
 .App h1 {
@@ -18,6 +19,57 @@
   font-size: 2.5rem;
   color: #c65308;
   letter-spacing: 2px;
+}
+
+.user-info {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.logout-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #c82333;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 1.5rem;
+  color: #555;
+}
+
+.login-prompt-btn {
+  background: #c65308;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.2s;
+}
+
+.login-prompt-btn:hover {
+  background: #a14206;
 }
 
 .app-nav {
