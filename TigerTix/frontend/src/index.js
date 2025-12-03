@@ -6,7 +6,6 @@ import reportWebVitals from "./reportWebVitals";
 
 
 import "./a11y.css"; // global a11y styles
-import EventList from "./components/EventList";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

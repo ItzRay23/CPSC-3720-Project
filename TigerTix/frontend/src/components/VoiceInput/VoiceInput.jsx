@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  isSpeechRecognitionSupported, 
   getSpeechRecognition, 
   getBrowserCompatibility,
   requestMicrophonePermission,
@@ -27,27 +26,10 @@ const VoiceInput = ({ onVoiceInput, disabled = false, className = '' }) => {
   const recognitionRef = useRef(null);
   const isListeningRef = useRef(false);
 
-  // Initialize component
-  useEffect(() => {
-    const compatibility = getBrowserCompatibility();
-    setBrowserInfo(compatibility);
-    setIsSupported(compatibility.speechRecognition);
-
-    if (compatibility.speechRecognition) {
-      initializeSpeechRecognition();
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, []);
-
   /**
    * Initialize Speech Recognition
    */
-  const initializeSpeechRecognition = () => {
+  const initializeSpeechRecognition = React.useCallback(() => {
     const SpeechRecognition = getSpeechRecognition();
     if (!SpeechRecognition) return;
 
@@ -98,7 +80,24 @@ const VoiceInput = ({ onVoiceInput, disabled = false, className = '' }) => {
       setIsProcessing(false);
       isListeningRef.current = false;
     };
-  };
+  }, [onVoiceInput]);
+
+  // Initialize component
+  useEffect(() => {
+    const compatibility = getBrowserCompatibility();
+    setBrowserInfo(compatibility);
+    setIsSupported(compatibility.speechRecognition);
+
+    if (compatibility.speechRecognition) {
+      initializeSpeechRecognition();
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, [initializeSpeechRecognition]);
 
   /**
    * Start voice recognition
