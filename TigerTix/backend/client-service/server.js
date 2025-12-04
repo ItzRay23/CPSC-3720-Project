@@ -37,16 +37,22 @@ const setupDatabase = () => {
 
 // Express app setup
 const app = express();
-// Allow requests from frontend (via gateway), local dev, and internal services
-const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    'http://localhost:3000',
-    'http://localhost:5003',
-    'http://localhost:8000'
-].filter(Boolean);
 
+// CORS configuration - allow Vercel preview URLs and internal services
 app.use(cors({
-    origin: allowedOrigins.length > 0 ? allowedOrigins : '*',
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        
+        // Allow Vercel preview and production URLs, localhost, and internal services
+        if (/^https:\/\/cpsc-3720-project.*\.vercel\.app$/.test(origin) ||
+            /^http:\/\/localhost:\d+$/.test(origin) ||
+            origin === process.env.FRONTEND_URL) {
+            return callback(null, true);
+        }
+        
+        console.warn(`Client Service: Blocked origin ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+    },
     credentials: true
 }));
 app.use(express.json());

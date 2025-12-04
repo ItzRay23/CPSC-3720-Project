@@ -6,15 +6,21 @@ const authRoutes = require('./routes/authRoutes');
 const app = express();
 const PORT = process.env.PORT || 5004;
 
-// Middleware
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:3000',
-  'http://localhost:8000'
-].filter(Boolean);
-
+// Middleware - CORS configuration
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    
+    // Allow Vercel preview and production URLs, localhost
+    if (/^https:\/\/cpsc-3720-project.*\.vercel\.app$/.test(origin) ||
+        /^http:\/\/localhost:\d+$/.test(origin) ||
+        origin === process.env.FRONTEND_URL) {
+      return callback(null, true);
+    }
+    
+    console.warn(`Auth Service: Blocked origin ${origin}`);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true // Allow cookies
 }));
 app.use(express.json());

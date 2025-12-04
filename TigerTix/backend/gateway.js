@@ -26,17 +26,33 @@ const allowedOrigins = [
   'http://localhost:3001'
 ].filter(Boolean);
 
+// Regex patterns for allowed origins
+const allowedOriginPatterns = [
+  /^https:\/\/cpsc-3720-project.*\.vercel\.app$/, // Vercel preview & production URLs
+  /^http:\/\/localhost:\d+$/ // Any localhost port
+];
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
+    // Check exact matches first
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS: Blocked origin ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      console.log(`✅ CORS: Allowed origin (exact match): ${origin}`);
+      return callback(null, true);
     }
+    
+    // Check pattern matches
+    const isAllowed = allowedOriginPatterns.some(pattern => pattern.test(origin));
+    if (isAllowed) {
+      console.log(`✅ CORS: Allowed origin (pattern match): ${origin}`);
+      return callback(null, true);
+    }
+    
+    // Block unrecognized origins
+    console.warn(`❌ CORS: Blocked origin ${origin}`);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
