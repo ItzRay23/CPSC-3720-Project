@@ -4,7 +4,8 @@
   "description": "TigerTix backend with LLM booking assistant",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node start-all-services.js",
+    "start:all": "node start-all-services.js",
     "dev": "nodemon server.js",
     "test": "jest",
     "test:watch": "jest --watch",

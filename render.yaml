@@ -1,0 +1,38 @@
+# Render Blueprint for TigerTix Backend
+# This file defines the infrastructure for deploying all microservices
+
+services:
+  # Backend Microservices (all-in-one)
+  - type: web
+    name: tigertix-backend
+    runtime: node
+    rootDir: TigerTix/backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: ADMIN_PORT
+        value: 5001
+      - key: CLIENT_PORT
+        value: 6001
+      - key: LLM_PORT
+        value: 5003
+      - key: AUTH_PORT
+        value: 5004
+    healthCheckPath: /health
+    autoDeploy: true
+    
+  # Frontend (optional - if deploying frontend on Render)
+  # - type: web
+  #   name: tigertix-frontend
+  #   runtime: static
+  #   rootDir: TigerTix/frontend
+  #   buildCommand: npm install && npm run build
+  #   staticPublishPath: build
+  #   envVars:
+  #     - key: REACT_APP_API_URL
+  #       value: https://tigertix-backend.onrender.com
+  #   autoDeploy: true
