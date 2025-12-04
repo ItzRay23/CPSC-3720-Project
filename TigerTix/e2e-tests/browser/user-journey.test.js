@@ -43,10 +43,10 @@ describe('👤 TigerTix User Journey Tests', () => {
     page.apiRequests = apiRequests;
     
     try {
-      await page.goto('http://localhost:3000', { waitUntil: 'networkidle0', timeout: 10000 });
+      await page.goto('https://cpsc-3720-project.vercel.app/', { waitUntil: 'networkidle0', timeout: 10000 });
     } catch (error) {
       console.log('⚠️ Frontend may not be running, attempting basic connection...');
-      await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded', timeout: 5000 });
+      await page.goto('https://cpsc-3720-project.vercel.app/', { waitUntil: 'domcontentloaded', timeout: 5000 });
     }
   });
 
@@ -662,7 +662,7 @@ describe('👤 TigerTix User Journey Tests', () => {
     test('Page load performance is acceptable', async () => {
       const startTime = Date.now();
       
-      await page.goto('http://localhost:3000', { waitUntil: 'networkidle0' });
+      await page.goto('https://cpsc-3720-project.vercel.app/', { waitUntil: 'networkidle0' });
       
       const loadTime = Date.now() - startTime;
       console.log(`⏱️ Page load time: ${loadTime}ms`);

@@ -38,10 +38,10 @@ describe('🎫 TigerTix Frontend E2E Tests', () => {
     
     // Navigate to the application
     try {
-      await page.goto('http://localhost:3000', { waitUntil: 'networkidle0', timeout: 10000 });
+      await page.goto('https://cpsc-3720-project.vercel.app/', { waitUntil: 'networkidle0', timeout: 10000 });
     } catch (error) {
       console.log('⚠️ Frontend may not be running, attempting basic connection...');
-      await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded', timeout: 5000 });
+      await page.goto('https://cpsc-3720-project.vercel.app/', { waitUntil: 'domcontentloaded', timeout: 5000 });
     }
   });
 
