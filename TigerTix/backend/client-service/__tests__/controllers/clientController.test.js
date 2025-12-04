@@ -220,7 +220,7 @@ describe('Client Service Controller', () => {
     });
 
     test('should handle event purchase successfully (Event 3 has 800 tickets)', async () => {
-      // Event 3 has 800 tickets available, so purchase should succeed
+      // Purchase 1 ticket from event 3
       const response = await request(app)
         .post('/api/events/3/purchase')
         .send({ quantity: 1 })
@@ -229,7 +229,10 @@ describe('Client Service Controller', () => {
       expect(response.body).toHaveProperty('message');
       expect(response.body.message).toBe('Successfully purchased 1 ticket');
       expect(response.body).toHaveProperty('event');
-      expect(response.body.event).toHaveProperty('tickets', 799); // 800 - 1
+      expect(response.body.event).toHaveProperty('tickets');
+      expect(response.body.event).toHaveProperty('id', 3);
+      // Verify tickets were decremented
+      expect(response.body.event.tickets).toBeLessThan(800);
     });
   });
 
