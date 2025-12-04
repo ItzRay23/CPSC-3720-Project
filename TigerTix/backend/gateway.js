@@ -106,11 +106,10 @@ const proxyOptions = {
 };
 
 // Admin Service proxy
+// Gateway receives: /api/admin/* → Forwards: /api/admin/* (admin service mounts at /api)
 app.use('/api/admin', createProxyMiddleware({
   target: `http://localhost:${SERVICES.ADMIN}`,
-  pathRewrite: {
-    '^/api/admin': '/api' // Remove /admin prefix when forwarding
-  },
+  pathRewrite: { '^/api/admin': '/api' },
   ...proxyOptions
 }));
 
@@ -125,20 +124,17 @@ app.use(['/api/client', '/api/events'], createProxyMiddleware({
 }));
 
 // LLM Service proxy
+// Gateway receives: /api/llm/* → Forwards: /api/llm/* (LLM service mounts at /api/llm)
 app.use('/api/llm', createProxyMiddleware({
   target: `http://localhost:${SERVICES.LLM}`,
-  pathRewrite: {
-    '^/api/llm': '/api/llm' // Keep full path
-  },
   ...proxyOptions
 }));
 
 // Auth Service proxy
+// Gateway receives: /api/auth/login
+// Forwards to auth service: /api/auth/login (auth service mounts routes at /api/auth)
 app.use('/api/auth', createProxyMiddleware({
   target: `http://localhost:${SERVICES.AUTH}`,
-  pathRewrite: {
-    '^/api/auth': '/api/auth' // Keep full path since auth service expects /api/auth
-  },
   ...proxyOptions
 }));
 
