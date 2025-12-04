@@ -35,7 +35,12 @@ const allowedOriginPatterns = [
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ CORS: Allowed (no origin header)');
+      return callback(null, true);
+    }
+    
+    console.log(`🔍 CORS: Checking origin: ${origin}`);
     
     // Check exact matches first
     if (allowedOrigins.includes(origin)) {
@@ -44,19 +49,23 @@ app.use(cors({
     }
     
     // Check pattern matches
-    const isAllowed = allowedOriginPatterns.some(pattern => pattern.test(origin));
-    if (isAllowed) {
-      console.log(`✅ CORS: Allowed origin (pattern match): ${origin}`);
-      return callback(null, true);
+    for (const pattern of allowedOriginPatterns) {
+      if (pattern.test(origin)) {
+        console.log(`✅ CORS: Allowed origin (pattern match): ${origin} matches ${pattern}`);
+        return callback(null, true);
+      }
     }
     
     // Block unrecognized origins
-    console.warn(`❌ CORS: Blocked origin ${origin}`);
-    callback(new Error('Not allowed by CORS'));
+    console.error(`❌ CORS: BLOCKED origin: ${origin}`);
+    console.error(`   Allowed origins: ${JSON.stringify(allowedOrigins)}`);
+    console.error(`   Allowed patterns: ${allowedOriginPatterns.map(p => p.toString())}`);
+    return callback(null, false); // Return false instead of Error to avoid crash
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 }));
 
 // Health check endpoint

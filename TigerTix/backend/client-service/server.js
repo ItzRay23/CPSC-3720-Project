@@ -47,11 +47,12 @@ app.use(cors({
         if (/^https:\/\/.*\.vercel\.app$/.test(origin) ||
             /^http:\/\/localhost:\d+$/.test(origin) ||
             origin === process.env.FRONTEND_URL) {
+            console.log(`✅ Client Service: Allowed origin ${origin}`);
             return callback(null, true);
         }
         
-        console.warn(`Client Service: Blocked origin ${origin}`);
-        callback(new Error('Not allowed by CORS'));
+        console.error(`❌ Client Service: BLOCKED origin ${origin}`);
+        return callback(null, false);
     },
     credentials: true
 }));

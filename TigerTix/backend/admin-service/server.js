@@ -55,11 +55,12 @@ app.use(cors({
         if (/^https:\/\/.*\.vercel\.app$/.test(origin) ||
             /^http:\/\/localhost:\d+$/.test(origin) ||
             origin === process.env.FRONTEND_URL) {
+            console.log(`✅ Admin Service: Allowed origin ${origin}`);
             return callback(null, true);
         }
         
-        console.warn(`Admin Service: Blocked origin ${origin}`);
-        callback(new Error('Not allowed by CORS'));
+        console.error(`❌ Admin Service: BLOCKED origin ${origin}`);
+        return callback(null, false);
     },
     credentials: true
 }));

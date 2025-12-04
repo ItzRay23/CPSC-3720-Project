@@ -15,11 +15,12 @@ app.use(cors({
     if (/^https:\/\/.*\.vercel\.app$/.test(origin) ||
         /^http:\/\/localhost:\d+$/.test(origin) ||
         origin === process.env.FRONTEND_URL) {
+      console.log(`✅ Auth Service: Allowed origin ${origin}`);
       return callback(null, true);
     }
     
-    console.warn(`Auth Service: Blocked origin ${origin}`);
-    callback(new Error('Not allowed by CORS'));
+    console.error(`❌ Auth Service: BLOCKED origin ${origin}`);
+    return callback(null, false);
   },
   credentials: true // Allow cookies
 }));
