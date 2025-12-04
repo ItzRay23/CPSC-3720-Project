@@ -4,11 +4,9 @@
 
 const request = require('supertest');
 const express = require('express');
-const { setupTestDatabase, cleanupTestDatabase } = require('../../../__tests__/helpers/testDatabase');
 const { mockEvents, validTestInputs, invalidTestInputs } = require('../../../__tests__/helpers/mockData');
 
 // Mock the admin model before requiring the routes
-let testDb;
 jest.mock('../../models/adminModel', () => ({
   addEvent: jest.fn(),
   getAllEvents: jest.fn(),
@@ -25,118 +23,104 @@ const app = express();
 app.use(express.json());
 app.use('/api', adminRoutes);
 
+// In-memory mock events storage
+let mockEventsStore = [];
+let nextEventId = 1;
+
 describe('Admin Service Controller', () => {
-  beforeAll(async () => {
-    testDb = await setupTestDatabase();
+  beforeEach(() => {
+    // Reset mock events store before each test
+    mockEventsStore = [
+      {
+        id: 1,
+        name: 'Auburn vs Alabama Football',
+        description: 'Iron Bowl 2024',
+        date: '2024-11-30',
+        time: '15:30',
+        location: 'Jordan-Hare Stadium',
+        total_tickets: 1000,
+        available_tickets: 750,
+        price: 85.00
+      },
+      {
+        id: 2,
+        name: 'Auburn Basketball vs Kentucky',
+        description: 'SEC Conference basketball game',
+        date: '2024-12-15',
+        time: '20:00',
+        location: 'Auburn Arena',
+        total_tickets: 500,
+        available_tickets: 300,
+        price: 35.00
+      },
+      {
+        id: 3,
+        name: 'Spring Concert Series',
+        description: 'Annual spring outdoor concert',
+        date: '2025-04-20',
+        time: '19:00',
+        location: 'Amphitheater',
+        total_tickets: 800,
+        available_tickets: 800,
+        price: 25.00
+      }
+    ];
+    nextEventId = 4;
     
-    // Setup mock implementations using test database
+    // Setup mock implementations with in-memory storage
     adminModel.addEvent.mockImplementation((eventData) => {
-      return new Promise((resolve, reject) => {
-        const { name, date, tickets } = eventData;
-        const stmt = testDb.prepare(`
-          INSERT INTO events (name, date, time, location, total_tickets, available_tickets, price, description)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        
-        stmt.run([
-          name, 
-          date, 
-          '18:00', 
-          'Test Location', 
-          tickets, 
-          tickets, 
-          20.00, 
-          'Test Description'
-        ], function(err) {
-          if (err) {
-            reject(new Error('Database error: ' + err.message));
-            return;
-          }
-          
-          testDb.get('SELECT * FROM events WHERE id = ?', [this.lastID], (err, row) => {
-            if (err) {
-              reject(new Error('Database error: ' + err.message));
-              return;
-            }
-            resolve(row);
-          });
-        });
-        stmt.finalize();
-      });
+      const { name, date, tickets } = eventData;
+      const newEvent = {
+        id: nextEventId++,
+        name,
+        description: 'Test Description',
+        date,
+        time: '18:00',
+        location: 'Test Location',
+        total_tickets: tickets,
+        available_tickets: tickets,
+        price: 20.00
+      };
+      mockEventsStore.push(newEvent);
+      return Promise.resolve(newEvent);
     });
     
     adminModel.getAllEvents.mockImplementation(() => {
-      return new Promise((resolve, reject) => {
-        testDb.all('SELECT * FROM events ORDER BY date', [], (err, rows) => {
-          if (err) {
-            reject(new Error('Database error: ' + err.message));
-            return;
-          }
-          resolve(rows || []);
-        });
-      });
+      return Promise.resolve([...mockEventsStore]);
     });
     
     adminModel.getEventById.mockImplementation((id) => {
-      return new Promise((resolve, reject) => {
-        // Convert id to number for comparison
-        const numId = parseInt(id, 10);
-        testDb.get('SELECT * FROM events WHERE id = ?', [numId], (err, row) => {
-          if (err) {
-            reject(new Error('Database error: ' + err.message));
-            return;
-          }
-          if (!row) {
-            reject(new Error('Event not found'));
-            return;
-          }
-          resolve(row);
-        });
-      });
+      const numId = parseInt(id, 10);
+      const event = mockEventsStore.find(e => e.id === numId);
+      if (!event) {
+        return Promise.reject(new Error('Event not found'));
+      }
+      return Promise.resolve({ ...event });
     });
     
     adminModel.updateEventTickets.mockImplementation((id, tickets) => {
-      return new Promise((resolve, reject) => {
-        const numId = parseInt(id, 10);
-        testDb.run('UPDATE events SET available_tickets = ? WHERE id = ?', [tickets, numId], function(err) {
-          if (err) {
-            reject(new Error('Database error: ' + err.message));
-            return;
-          }
-          if (this.changes === 0) {
-            reject(new Error('Event not found'));
-            return;
-          }
-          testDb.get('SELECT * FROM events WHERE id = ?', [numId], (err, row) => {
-            if (err) {
-              reject(new Error('Database error: ' + err.message));
-              return;
-            }
-            resolve(row);
-          });
-        });
-      });
+      const numId = parseInt(id, 10);
+      const eventIndex = mockEventsStore.findIndex(e => e.id === numId);
+      if (eventIndex === -1) {
+        return Promise.reject(new Error('Event not found'));
+      }
+      mockEventsStore[eventIndex].available_tickets = tickets;
+      return Promise.resolve({ ...mockEventsStore[eventIndex] });
     });
     
     adminModel.removeEvent.mockImplementation((id) => {
-      return new Promise((resolve, reject) => {
-        testDb.run('DELETE FROM events WHERE id = ?', [id], function(err) {
-          if (err) {
-            reject(new Error('Database error: ' + err.message));
-            return;
-          }
-          if (this.changes === 0) {
-            reject(new Error('Event not found'));
-            return;
-          }
-          resolve({ message: 'Event deleted successfully', id });
-        });
-      });
+      const numId = parseInt(id, 10);
+      const eventIndex = mockEventsStore.findIndex(e => e.id === numId);
+      if (eventIndex === -1) {
+        return Promise.reject(new Error('Event not found'));
+      }
+      mockEventsStore.splice(eventIndex, 1);
+      return Promise.resolve({ message: 'Event deleted successfully', id: numId });
     });
   });
 
-  afterAll(async () => {
-    await cleanupTestDatabase(testDb);
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('POST /api/events', () => {

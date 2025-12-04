@@ -4,11 +4,9 @@
 
 const request = require('supertest');
 const express = require('express');
-const { setupTestDatabase, cleanupTestDatabase } = require('../../../__tests__/helpers/testDatabase');
 const { mockEvents, validTestInputs, invalidTestInputs } = require('../../../__tests__/helpers/mockData');
 
 // Mock the client model before requiring the routes
-let testDb;
 jest.mock('../../models/clientModel', () => ({
   getAllEvents: jest.fn(),
   getEventById: jest.fn(),
@@ -23,70 +21,80 @@ const app = express();
 app.use(express.json());
 app.use('/api', clientRoutes);
 
+// In-memory mock events storage
+let mockEventsStore = [];
+
 describe('Client Service Controller', () => {
-  beforeAll(async () => {
-    testDb = await setupTestDatabase();
+  beforeEach(() => {
+    // Reset mock events store before each test
+    mockEventsStore = [
+      {
+        id: 1,
+        name: 'Auburn vs Alabama Football',
+        description: 'Iron Bowl 2024',
+        date: '2024-11-30',
+        time: '15:30',
+        location: 'Jordan-Hare Stadium',
+        total_tickets: 1000,
+        available_tickets: 750,
+        price: 85.00
+      },
+      {
+        id: 2,
+        name: 'Auburn Basketball vs Kentucky',
+        description: 'SEC Conference basketball game',
+        date: '2024-12-15',
+        time: '20:00',
+        location: 'Auburn Arena',
+        total_tickets: 500,
+        available_tickets: 300,
+        price: 35.00
+      },
+      {
+        id: 3,
+        name: 'Spring Concert Series',
+        description: 'Annual spring outdoor concert',
+        date: '2025-04-20',
+        time: '19:00',
+        location: 'Amphitheater',
+        total_tickets: 800,
+        available_tickets: 800,
+        price: 25.00
+      }
+    ];
     
-    // Setup mock implementations using test database
+    // Setup mock implementations with in-memory storage
     clientModel.getAllEvents.mockImplementation(() => {
-      return new Promise((resolve, reject) => {
-        testDb.all('SELECT * FROM events WHERE available_tickets > 0 ORDER BY date', [], (err, rows) => {
-          if (err) {
-            reject(new Error('Database error: ' + err.message));
-            return;
-          }
-          resolve(rows || []);
-        });
-      });
+      return Promise.resolve(
+        mockEventsStore.filter(e => e.available_tickets > 0)
+      );
     });
     
     clientModel.getEventById.mockImplementation((id) => {
-      return new Promise((resolve, reject) => {
-        const numId = parseInt(id, 10);
-        testDb.get('SELECT * FROM events WHERE id = ? AND available_tickets > 0', [numId], (err, row) => {
-          if (err) {
-            reject(new Error('Database error: ' + err.message));
-            return;
-          }
-          if (!row) {
-            reject(new Error('Event not found'));
-            return;
-          }
-          // Add tickets property for controller compatibility
-          row.tickets = row.available_tickets;
-          resolve(row);
-        });
-      });
+      const numId = parseInt(id, 10);
+      const event = mockEventsStore.find(e => e.id === numId && e.available_tickets > 0);
+      if (!event) {
+        return Promise.reject(new Error('Event not found'));
+      }
+      return Promise.resolve({ ...event, tickets: event.available_tickets });
     });
     
     clientModel.updateEventTickets.mockImplementation((id, tickets) => {
-      return new Promise((resolve, reject) => {
-        const numId = parseInt(id, 10);
-        testDb.run('UPDATE events SET available_tickets = ? WHERE id = ?', [tickets, numId], function(err) {
-          if (err) {
-            reject(new Error('Database error: ' + err.message));
-            return;
-          }
-          if (this.changes === 0) {
-            reject(new Error('Event not found'));
-            return;
-          }
-          testDb.get('SELECT * FROM events WHERE id = ?', [numId], (err, row) => {
-            if (err) {
-              reject(new Error('Database error: ' + err.message));
-              return;
-            }
-            // Add tickets property for controller compatibility
-            row.tickets = row.available_tickets;
-            resolve(row);
-          });
-        });
+      const numId = parseInt(id, 10);
+      const eventIndex = mockEventsStore.findIndex(e => e.id === numId);
+      if (eventIndex === -1) {
+        return Promise.reject(new Error('Event not found'));
+      }
+      mockEventsStore[eventIndex].available_tickets = tickets;
+      return Promise.resolve({
+        ...mockEventsStore[eventIndex],
+        tickets: mockEventsStore[eventIndex].available_tickets
       });
     });
   });
 
-  afterAll(async () => {
-    await cleanupTestDatabase(testDb);
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('GET /api/events', () => {
