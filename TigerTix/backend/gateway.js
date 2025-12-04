@@ -107,7 +107,7 @@ app.use('/api/llm', createProxyMiddleware({
 app.use('/api/auth', createProxyMiddleware({
   target: `http://localhost:${SERVICES.AUTH}`,
   pathRewrite: {
-    '^/api/auth': '/api/auth' // Keep full path
+    '^/api/auth': '/api/auth' // Keep full path since auth service expects /api/auth
   },
   ...proxyOptions
 }));
