@@ -81,12 +81,19 @@ function Auth({ onLoginSuccess }) {
 					lastName: formData.lastName
 				};
 
+			console.log(`🔐 Auth: Starting ${isLogin ? 'login' : 'register'} request`);
+			console.log('📦 Request body:', body);
+
 			// Use backend URL from environment variable (required)
 			const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.trim?.();
 			if (!BACKEND_URL) {
 				throw new Error('REACT_APP_BACKEND_URL environment variable is required');
 			}
-			const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+
+			const url = `${BACKEND_URL}${endpoint}`;
+			console.log('🌐 Sending request to:', url);
+
+			const response = await fetch(url, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -95,14 +102,34 @@ function Auth({ onLoginSuccess }) {
 				body: JSON.stringify(body)
 			});
 
+			console.log('📡 Response status:', response.status, response.statusText);
+
 			// Check if response is JSON
 			const contentType = response.headers.get('content-type');
+			console.log('📄 Content-Type:', contentType);
+
 			if (!contentType || !contentType.includes('application/json')) {
-				console.error('Non-JSON response received:', await response.text());
-				throw new Error('Server error: Invalid response format. Check CORS configuration.');
+				const responseText = await response.text();
+				console.error('❌ Non-JSON response received:');
+				console.error('Response text:', responseText);
+				console.error('Response headers:', Array.from(response.headers.entries()));
+				throw new Error('Server error: Invalid response format. This usually means CORS is blocking the request.');
 			}
 
-			const data = await response.json();
+			// Get raw response text first
+			const responseText = await response.text();
+			console.log('📥 Raw response:', responseText);
+
+			// Try to parse JSON
+			let data;
+			try {
+				data = JSON.parse(responseText);
+				console.log('✅ Parsed JSON:', data);
+			} catch (parseError) {
+				console.error('❌ JSON parse error:', parseError.message);
+				console.error('Failed to parse:', responseText);
+				throw new Error(`JSON parse failed: ${parseError.message}`);
+			}
 
 			if (!response.ok) {
 				throw new Error(data.error || 'Authentication failed');

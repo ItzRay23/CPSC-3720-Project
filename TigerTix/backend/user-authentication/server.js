@@ -9,7 +9,12 @@ const PORT = process.env.PORT || 5004;
 // Middleware - CORS configuration
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ Auth Service: Allowed (no origin)');
+      return callback(null, true);
+    }
+    
+    console.log(`🔍 Auth Service: Checking origin: ${origin}`);
     
     // Allow all Vercel URLs (preview and production), localhost
     if (/^https:\/\/.*\.vercel\.app$/.test(origin) ||
@@ -26,6 +31,14 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`📨 Auth Service: ${req.method} ${req.path}`);
+  console.log(`   Origin: ${req.headers.origin || 'none'}`);
+  console.log(`   Content-Type: ${req.headers['content-type'] || 'none'}`);
+  next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

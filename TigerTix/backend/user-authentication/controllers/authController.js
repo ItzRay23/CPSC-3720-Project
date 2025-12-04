@@ -29,7 +29,7 @@ const authController = {
       // Create user with hashed password (bcryptjs handles hashing in model)
       const newUser = await userModel.createUser(email, password, firstName, lastName);
 
-      res.status(201).json({
+      const responseData = {
         message: 'User registered successfully',
         user: {
           id: newUser.id,
@@ -37,7 +37,10 @@ const authController = {
           firstName: newUser.first_name,
           lastName: newUser.last_name
         }
-      });
+      };
+
+      console.log('✅ Registration successful, sending response:', JSON.stringify(responseData));
+      res.status(201).json(responseData);
     } catch (error) {
       console.error('Registration error:', error);
       res.status(500).json({ error: 'Registration failed' });
@@ -88,7 +91,7 @@ const authController = {
         maxAge: 30 * 60 * 1000 // 30 minutes
       });
 
-      res.status(200).json({
+      const responseData = {
         message: 'Login successful',
         token, // Also return in response for in-memory React state
         user: {
@@ -97,7 +100,10 @@ const authController = {
           firstName: user.first_name,
           lastName: user.last_name
         }
-      });
+      };
+
+      console.log('✅ Login successful, sending response:', JSON.stringify(responseData));
+      res.status(200).json(responseData);
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ error: 'Login failed' });

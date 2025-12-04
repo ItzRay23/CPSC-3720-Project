@@ -102,7 +102,8 @@ const proxyOptions = {
   changeOrigin: true,
   logLevel: process.env.NODE_ENV === 'production' ? 'warn' : 'debug',
   onError: (err, req, res) => {
-    console.error('Proxy Error:', err.message);
+    console.error('❌ Proxy Error:', err.message);
+    console.error('   Request:', req.method, req.path);
     res.status(502).json({
       success: false,
       error: 'Service temporarily unavailable',
@@ -110,10 +111,15 @@ const proxyOptions = {
     });
   },
   onProxyReq: (proxyReq, req, res) => {
+    console.log(`🔄 Proxying: ${req.method} ${req.path} → ${proxyReq.path}`);
     // Forward original headers
     if (req.headers.cookie) {
       proxyReq.setHeader('Cookie', req.headers.cookie);
     }
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`✅ Proxy Response: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
+    console.log(`   Content-Type: ${proxyRes.headers['content-type']}`);
   }
 };
 
