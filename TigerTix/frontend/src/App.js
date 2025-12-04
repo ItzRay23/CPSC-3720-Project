@@ -34,8 +34,14 @@ function App() {
 					});
 
 					if (response.ok) {
-						const data = await response.json();
-						setUser(data.user);
+						const contentType = response.headers.get('content-type');
+						if (contentType && contentType.includes('application/json')) {
+							const data = await response.json();
+							setUser(data.user);
+						} else {
+							console.error('Non-JSON response from auth verify');
+							localStorage.removeItem('authToken');
+						}
 					} else {
 						// Token invalid or expired
 						localStorage.removeItem('authToken');

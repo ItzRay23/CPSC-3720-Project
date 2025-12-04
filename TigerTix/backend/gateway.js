@@ -28,7 +28,7 @@ const allowedOrigins = [
 
 // Regex patterns for allowed origins
 const allowedOriginPatterns = [
-  /^https:\/\/cpsc-3720-project.*\.vercel\.app$/, // Vercel preview & production URLs
+  /^https:\/\/.*\.vercel\.app$/, // All Vercel URLs (preview & production)
   /^http:\/\/localhost:\d+$/ // Any localhost port
 ];
 

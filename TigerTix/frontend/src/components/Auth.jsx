@@ -95,6 +95,13 @@ function Auth({ onLoginSuccess }) {
 				body: JSON.stringify(body)
 			});
 
+			// Check if response is JSON
+			const contentType = response.headers.get('content-type');
+			if (!contentType || !contentType.includes('application/json')) {
+				console.error('Non-JSON response received:', await response.text());
+				throw new Error('Server error: Invalid response format. Check CORS configuration.');
+			}
+
 			const data = await response.json();
 
 			if (!response.ok) {

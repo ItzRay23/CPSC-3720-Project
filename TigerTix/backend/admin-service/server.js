@@ -51,8 +51,8 @@ app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
         
-        // Allow Vercel preview and production URLs
-        if (/^https:\/\/cpsc-3720-project.*\.vercel\.app$/.test(origin) ||
+        // Allow all Vercel URLs (preview and production)
+        if (/^https:\/\/.*\.vercel\.app$/.test(origin) ||
             /^http:\/\/localhost:\d+$/.test(origin) ||
             origin === process.env.FRONTEND_URL) {
             return callback(null, true);
