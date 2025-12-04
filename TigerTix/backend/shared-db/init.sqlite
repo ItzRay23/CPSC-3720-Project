@@ -1,0 +1,26 @@
+-- Initialize events table
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    date TEXT NOT NULL,
+    tickets INTEGER NOT NULL
+);
+
+-- Add indexes for common queries
+CREATE INDEX IF NOT EXISTS idx_events_date ON events(date);
+
+-- Initialize users table for authentication
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login DATETIME
+);
+
+-- Add index for user email lookups
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Add any future table creation statements below
