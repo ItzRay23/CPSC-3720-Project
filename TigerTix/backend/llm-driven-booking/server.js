@@ -23,8 +23,16 @@ const setupService = () => {
 
 // Express app setup
 const app = express();
+// Allow requests from frontend (via gateway), local dev, and internal services
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000',
+    'http://localhost:6001',
+    'http://localhost:8000'
+].filter(Boolean);
+
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:6001'], // Allow frontend and client service
+    origin: allowedOrigins.length > 0 ? allowedOrigins : '*',
     credentials: true
 }));
 app.use(express.json());

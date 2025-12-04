@@ -37,8 +37,16 @@ const setupDatabase = () => {
 
 // Express app setup
 const app = express();
+// Allow requests from frontend (via gateway), local dev, and internal services
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000',
+    'http://localhost:5003',
+    'http://localhost:8000'
+].filter(Boolean);
+
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5003'], // Allow frontend and LLM service
+    origin: allowedOrigins.length > 0 ? allowedOrigins : '*',
     credentials: true
 }));
 app.use(express.json());

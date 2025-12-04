@@ -12,25 +12,38 @@ const services = [
     name: 'Admin Service',
     path: path.join(__dirname, 'admin-service', 'server.js'),
     port: process.env.ADMIN_PORT || 5001,
-    env: { PORT: process.env.ADMIN_PORT || 5001 }
+    env: { 
+      PORT: process.env.ADMIN_PORT || 5001,
+      FRONTEND_URL: process.env.FRONTEND_URL
+    }
   },
   {
     name: 'Client Service',
     path: path.join(__dirname, 'client-service', 'server.js'),
     port: process.env.CLIENT_PORT || 6001,
-    env: { PORT: process.env.CLIENT_PORT || 6001 }
+    env: { 
+      PORT: process.env.CLIENT_PORT || 6001,
+      FRONTEND_URL: process.env.FRONTEND_URL
+    }
   },
   {
     name: 'LLM Booking Service',
     path: path.join(__dirname, 'llm-driven-booking', 'server.js'),
     port: process.env.LLM_PORT || 5003,
-    env: { PORT: process.env.LLM_PORT || 5003, OPENAI_API_KEY: process.env.OPENAI_API_KEY }
+    env: { 
+      PORT: process.env.LLM_PORT || 5003,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY
+    }
   },
   {
     name: 'User Authentication Service',
     path: path.join(__dirname, 'user-authentication', 'server.js'),
     port: process.env.AUTH_PORT || 5004,
-    env: { PORT: process.env.AUTH_PORT || 5004 }
+    env: { 
+      PORT: process.env.AUTH_PORT || 5004,
+      FRONTEND_URL: process.env.FRONTEND_URL
+    }
   },
   {
     name: 'API Gateway',
