@@ -81,54 +81,27 @@ function Auth({ onLoginSuccess }) {
 					lastName: formData.lastName
 				};
 
-			console.log(`🔐 Auth: Starting ${isLogin ? 'login' : 'register'} request`);
-			console.log('📦 Request body:', body);
-
-			// Use backend URL from environment variable (required)
+			// Get backend URL
 			const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.trim?.();
 			if (!BACKEND_URL) {
-				throw new Error('REACT_APP_BACKEND_URL environment variable is required');
+				throw new Error('REACT_APP_BACKEND_URL is not configured');
 			}
 
-			const url = `${BACKEND_URL}${endpoint}`;
-			console.log('🌐 Sending request to:', url);
-
-			const response = await fetch(url, {
+			// Send request
+			const response = await fetch(`${BACKEND_URL}${endpoint}`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include', // Include cookies
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
 				body: JSON.stringify(body)
 			});
 
-			console.log('📡 Response status:', response.status, response.statusText);
-
-			// Get content type and raw response
-			const contentType = response.headers.get('content-type');
-			const responseText = await response.text();
-			
-			console.log('📄 Content-Type:', contentType);
-			console.log('📥 Raw response:', responseText.substring(0, 200));
-
-			// Check if response is JSON
-			if (!contentType || !contentType.includes('application/json')) {
-				console.error('❌ Non-JSON response received');
-				console.error('Response status:', response.status);
-				console.error('Response text:', responseText);
-				throw new Error(`Server returned non-JSON response (${response.status}). Check backend logs.`);
+			// Parse response
+			if (!response.ok) {
+				const error = await response.json().catch(() => ({ error: 'Request failed' }));
+				throw new Error(error.error || `Request failed (${response.status})`);
 			}
 
-			// Try to parse JSON
-			let data;
-			try {
-				data = JSON.parse(responseText);
-				console.log('✅ Parsed JSON:', data);
-			} catch (parseError) {
-				console.error('❌ JSON parse error:', parseError.message);
-				console.error('Failed to parse:', responseText);
-				throw new Error(`Invalid JSON response from server`);
-			}
+			const data = await response.json();
 
 			if (!response.ok) {
 				throw new Error(data.error || 'Authentication failed');

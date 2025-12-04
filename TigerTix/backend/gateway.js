@@ -32,44 +32,23 @@ const allowedOriginPatterns = [
   /^http:\/\/localhost:\d+$/ // Any localhost port
 ];
 
-// CORS middleware configuration
-const corsOptions = {
+// Simple CORS - allow Vercel and localhost
+app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (server-to-server, curl, Postman, etc.)
-    if (!origin) {
-      return callback(null, true);
+    // No origin or matches patterns
+    if (!origin || 
+        allowedOrigins.includes(origin) ||
+        allowedOriginPatterns.some(pattern => pattern.test(origin))) {
+      callback(null, true);
+    } else {
+      callback(null, false);
     }
-    
-    // Check exact matches first (configured origins)
-    if (allowedOrigins.includes(origin)) {
-      console.log(`✅ CORS: ${origin}`);
-      return callback(null, true);
-    }
-    
-    // Check pattern matches (Vercel, localhost)
-    for (const pattern of allowedOriginPatterns) {
-      if (pattern.test(origin)) {
-        console.log(`✅ CORS: ${origin}`);
-        return callback(null, true);
-      }
-    }
-    
-    // Block unrecognized origins
-    console.error(`❌ CORS BLOCKED: ${origin}`);
-    console.error(`   Expected: ${JSON.stringify(allowedOrigins)} or matching ${allowedOriginPatterns.map(p => p.toString()).join(', ')}`);
-    return callback(null, false);
   },
-  credentials: true, // Required for cookies
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie'],
-  optionsSuccessStatus: 200, // For legacy browser support
-  preflightContinue: false
-};
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+}));
 
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
