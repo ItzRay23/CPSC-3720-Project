@@ -80,3 +80,5 @@ jobs:
         run: npm test
         env:
           CI: true
+          BACKEND_URL: ${{ secrets.RENDER_BACKEND_URL }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}

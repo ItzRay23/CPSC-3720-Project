@@ -8,11 +8,12 @@
 const { spawn } = require('child_process');
 const axios = require('axios');
 
+// Use environment variables for deployed services, fallback to localhost for local testing
 const SERVICES = {
-  FRONTEND: 'http://localhost:3000',
-  ADMIN_SERVICE: 'http://localhost:5002',
-  CLIENT_SERVICE: 'http://localhost:6001', 
-  LLM_SERVICE: 'http://localhost:5003'
+  FRONTEND: process.env.FRONTEND_URL || 'http://localhost:3000',
+  ADMIN_SERVICE: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/admin` : 'http://localhost:5002',
+  CLIENT_SERVICE: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/client` : 'http://localhost:6001', 
+  LLM_SERVICE: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/llm` : 'http://localhost:5003'
 };
 
 const COLORS = {

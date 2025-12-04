@@ -1,5 +1,5 @@
 /**
- * Start all TigerTix backend microservices
+ * Start all TigerTix backend microservices with API Gateway
  * This script is designed for Render deployment where all services run in a single container
  */
 
@@ -31,6 +31,20 @@ const services = [
     path: path.join(__dirname, 'user-authentication', 'server.js'),
     port: process.env.AUTH_PORT || 5004,
     env: { PORT: process.env.AUTH_PORT || 5004 }
+  },
+  {
+    name: 'API Gateway',
+    path: path.join(__dirname, 'gateway.js'),
+    port: process.env.PORT || 8000,
+    env: {
+      PORT: process.env.PORT || 8000,
+      ADMIN_PORT: process.env.ADMIN_PORT || 5001,
+      CLIENT_PORT: process.env.CLIENT_PORT || 6001,
+      LLM_PORT: process.env.LLM_PORT || 5003,
+      AUTH_PORT: process.env.AUTH_PORT || 5004,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY
+    }
   }
 ];
 
