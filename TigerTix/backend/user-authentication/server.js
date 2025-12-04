@@ -25,7 +25,7 @@ const corsOptions = {
     }
     
     console.error(`❌ Auth Service: BLOCKED origin ${origin}`);
-    callback(new Error(`CORS policy: Origin ${origin} not allowed by auth service`), false);
+    return callback(null, false);
   },
   credentials: true // Allow cookies
 };
@@ -33,19 +33,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
-
-// CORS error handler
-app.use((err, req, res, next) => {
-  if (err && err.message && err.message.includes('CORS policy')) {
-    console.error('🚫 Auth CORS Error:', err.message);
-    return res.status(403).json({
-      success: false,
-      error: 'CORS Error',
-      message: err.message
-    });
-  }
-  next(err);
-});
 
 // Request logging middleware
 app.use((req, res, next) => {

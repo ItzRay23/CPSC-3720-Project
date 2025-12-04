@@ -108,17 +108,18 @@ function Auth({ onLoginSuccess }) {
 			const contentType = response.headers.get('content-type');
 			console.log('📄 Content-Type:', contentType);
 
-			if (!contentType || !contentType.includes('application/json')) {
-				const responseText = await response.text();
-				console.error('❌ Non-JSON response received:');
-				console.error('Response text:', responseText);
-				console.error('Response headers:', Array.from(response.headers.entries()));
-				throw new Error('Server error: Invalid response format. This usually means CORS is blocking the request.');
-			}
-
 			// Get raw response text first
 			const responseText = await response.text();
 			console.log('📥 Raw response:', responseText);
+			console.log('📄 Content-Type:', contentType);
+
+			// Check if response is JSON
+			if (!contentType || !contentType.includes('application/json')) {
+				console.error('❌ Non-JSON response received');
+				console.error('Response status:', response.status);
+				console.error('Response text:', responseText);
+				throw new Error(`Server returned non-JSON response (${response.status}). Check backend logs.`);
+			}
 
 			// Try to parse JSON
 			let data;
@@ -128,7 +129,7 @@ function Auth({ onLoginSuccess }) {
 			} catch (parseError) {
 				console.error('❌ JSON parse error:', parseError.message);
 				console.error('Failed to parse:', responseText);
-				throw new Error(`JSON parse failed: ${parseError.message}`);
+				throw new Error(`Invalid JSON response from server`);
 			}
 
 			if (!response.ok) {
