@@ -14,98 +14,91 @@ if (!BACKEND_BASE) {
   throw new Error('REACT_APP_BACKEND_URL environment variable is required');
 }
 
-const CLIENT_SERVICE_BASE = `${BACKEND_BASE}/api/client`;
-const LLM_SERVICE_BASE = `${BACKEND_BASE}/api/llm`;
+// All API calls go through the gateway with proper routing
+const API_BASE = `${BACKEND_BASE}/api`;
 
 console.log('🔧 API Configuration:');
-console.log(`  Backend: ${BACKEND_BASE}`);
-console.log(`  Client Service: ${CLIENT_SERVICE_BASE}`);
-console.log(`  LLM Service: ${LLM_SERVICE_BASE}`);
+console.log(`  Backend Gateway: ${BACKEND_BASE}`);
+console.log(`  API Base: ${API_BASE}`);
 
-  /**
+/**
  * @function fetchEvents
- * @description Fetches all events directly from the client service.
+ * @description Fetches all events from the client service via gateway.
+ * Route: /api/client/api/events → gateway removes /client → client service gets /api/events
  * @returns {Promise<Array>} - Resolves with an array of events
  */
 export async function fetchEvents() {
-  console.log(`📡 Frontend: Fetching events from client service: ${CLIENT_SERVICE_BASE}/api/events`);
-  const res = await fetch(`${CLIENT_SERVICE_BASE}/api/events`, {
+  const res = await fetch(`${API_BASE}/client/api/events`, {
     headers: { Accept: "application/json" },
+    credentials: 'include'
   });
   if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
   const data = await res.json();
-  console.log(`✅ Frontend: Received ${Array.isArray(data) ? data.length : 0} events from client service`);
-  // Your backend returns the array directly; fall back if someone later wraps it.
   return Array.isArray(data) ? data : data?.events ?? [];
 }
 
 /**
  * @function purchaseEvent
- * @description Purchases a ticket for a specific event directly from client service.
+ * @description Purchases a ticket for a specific event via client service.
+ * Route: /api/client/api/events/:id/purchase → gateway removes /client → client service gets /api/events/:id/purchase
  * @param {number} id - Event ID
  * @returns {Promise<Object>} - Resolves with the updated event
  */
 export async function purchaseEvent(id) {
-  console.log(`📡 Frontend: Purchasing ticket for event ${id} from client service`);
-  const res = await fetch(`${CLIENT_SERVICE_BASE}/api/events/${id}/purchase`, {
+  const res = await fetch(`${API_BASE}/client/api/events/${id}/purchase`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: 'include'
   });
   if (!res.ok) {
     const msg = await res.text().catch(() => "");
     throw new Error(msg || `Purchase failed (${res.status})`);
   }
-  const result = await res.json();
-  console.log(`✅ Frontend: Successfully purchased ticket for event ${id}`);
-  return result;
+  return await res.json();
 }
 
 /**
  * @function sendChatMessage
- * @description Sends a chat message to the LLM booking assistant
+ * @description Sends a chat message to the LLM booking assistant.
+ * Route: /api/llm/parse → gateway keeps full path → LLM service gets /api/llm/parse
  * @param {string} message - User's message
  * @returns {Promise<Object>} - Resolves with parsed intent and response
  */
 export async function sendChatMessage(message) {
-  console.log(`📡 Frontend: Sending chat message to LLM service: "${message}"`);
-  const res = await fetch(`${LLM_SERVICE_BASE}/api/llm/parse`, {
+  const res = await fetch(`${API_BASE}/llm/parse`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: 'include',
     body: JSON.stringify({ message })
   });
   
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    console.error(`❌ Frontend: Chat request failed (${res.status}):`, errorData.error);
     throw new Error(errorData.error || `Chat request failed (${res.status})`);
   }
   
-  const result = await res.json();
-  console.log(`✅ Frontend: Received LLM response with intent: ${result.parsed?.intent}`);
-  return result;
+  return await res.json();
 }
 
 /**
  * @function confirmBooking
- * @description Confirms a booking with the LLM service (which handles the booking through client service)
+ * @description Confirms a booking with the LLM service (which handles the booking through client service).
+ * Route: /api/llm/confirm-booking → gateway keeps full path → LLM service gets /api/llm/confirm-booking
  * @param {Object} bookingData - Booking details {eventId, tickets}
  * @returns {Promise<Object>} - Resolves with booking confirmation
  */
 export async function confirmBooking(bookingData) {
-  console.log(`📡 Frontend: Confirming booking through LLM service:`, bookingData);
-  const res = await fetch(`${LLM_SERVICE_BASE}/api/llm/confirm-booking`, {
+  const res = await fetch(`${API_BASE}/llm/confirm-booking`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: 'include',
     body: JSON.stringify(bookingData)
   });
   
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    console.error(`❌ Frontend: Booking confirmation failed (${res.status}):`, errorData.error);
     throw new Error(errorData.error || `Booking confirmation failed (${res.status})`);
   }
   
-  const result = await res.json();
-  console.log(`✅ Frontend: Booking confirmed successfully:`, result.booking);
-  return result;
+  return await res.json();
 }
