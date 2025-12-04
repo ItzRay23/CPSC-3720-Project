@@ -7,8 +7,14 @@ const app = express();
 const PORT = process.env.PORT || 5004;
 
 // Middleware
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:8000'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true // Allow cookies
 }));
 app.use(express.json());
