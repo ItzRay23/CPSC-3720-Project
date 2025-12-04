@@ -28,8 +28,8 @@ console.log(`  LLM Service: ${LLM_SERVICE_BASE}`);
  * @returns {Promise<Array>} - Resolves with an array of events
  */
 export async function fetchEvents() {
-  console.log(`📡 Frontend: Fetching events from client service: ${CLIENT_SERVICE_BASE}/api/events`);
-  const res = await fetch(`${CLIENT_SERVICE_BASE}/api/events`, {
+  console.log(`📡 Fetching events from: ${CLIENT_SERVICE_BASE}/events`);
+  const res = await fetch(`${CLIENT_SERVICE_BASE}/events`, {
     headers: { Accept: "application/json" },
   });
   if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
@@ -46,8 +46,8 @@ export async function fetchEvents() {
  * @returns {Promise<Object>} - Resolves with the updated event
  */
 export async function purchaseEvent(id) {
-  console.log(`📡 Frontend: Purchasing ticket for event ${id} from client service`);
-  const res = await fetch(`${CLIENT_SERVICE_BASE}/api/events/${id}/purchase`, {
+  console.log(`📡 Purchasing ticket for event ${id}`);
+  const res = await fetch(`${CLIENT_SERVICE_BASE}/events/${id}/purchase`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
   });
@@ -67,8 +67,8 @@ export async function purchaseEvent(id) {
  * @returns {Promise<Object>} - Resolves with parsed intent and response
  */
 export async function sendChatMessage(message) {
-  console.log(`📡 Frontend: Sending chat message to LLM service: "${message}"`);
-  const res = await fetch(`${LLM_SERVICE_BASE}/api/llm/parse`, {
+  console.log(`📡 Sending chat message: "${message}"`);
+  const res = await fetch(`${LLM_SERVICE_BASE}/parse`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ message })
@@ -92,8 +92,8 @@ export async function sendChatMessage(message) {
  * @returns {Promise<Object>} - Resolves with booking confirmation
  */
 export async function confirmBooking(bookingData) {
-  console.log(`📡 Frontend: Confirming booking through LLM service:`, bookingData);
-  const res = await fetch(`${LLM_SERVICE_BASE}/api/llm/confirm-booking`, {
+  console.log(`📡 Confirming booking:`, bookingData);
+  const res = await fetch(`${LLM_SERVICE_BASE}/confirm-booking`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(bookingData)
