@@ -81,8 +81,11 @@ function Auth({ onLoginSuccess }) {
 					lastName: formData.lastName
 				};
 
-			// Use backend URL from environment variable or fall back to gateway
-			const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.trim?.() || 'http://localhost:8000';
+			// Use backend URL from environment variable (required)
+			const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.trim?.();
+			if (!BACKEND_URL) {
+				throw new Error('REACT_APP_BACKEND_URL environment variable is required');
+			}
 			const response = await fetch(`${BACKEND_URL}${endpoint}`, {
 				method: 'POST',
 				headers: {

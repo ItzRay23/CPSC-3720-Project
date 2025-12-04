@@ -22,7 +22,10 @@ function App() {
 			const token = localStorage.getItem('authToken');
 			if (token) {
 				try {
-					const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.trim?.() || 'http://localhost:8000';
+					const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.trim?.();
+					if (!BACKEND_URL) {
+						throw new Error('REACT_APP_BACKEND_URL is required');
+					}
 					const response = await fetch(`${BACKEND_URL}/api/auth/verify`, {
 						headers: {
 							'Authorization': `Bearer ${token}`
@@ -55,7 +58,10 @@ function App() {
 
 	const handleLogout = async () => {
 		try {
-			const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.trim?.() || 'http://localhost:8000';
+			const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.trim?.();
+			if (!BACKEND_URL) {
+				throw new Error('REACT_APP_BACKEND_URL is required');
+			}
 			await fetch(`${BACKEND_URL}/api/auth/logout`, {
 				method: 'POST',
 				credentials: 'include'

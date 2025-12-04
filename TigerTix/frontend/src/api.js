@@ -2,14 +2,25 @@
 
 // src/api.js
 // Service endpoints configuration
-// Use single backend URL for deployed environment, individual services for local dev
-const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL?.trim?.() || "";
-const CLIENT_SERVICE_BASE = BACKEND_BASE 
-  ? `${BACKEND_BASE}/api/client`
-  : (process.env.REACT_APP_CLIENT_API_BASE?.trim?.() || "http://localhost:6001");
-const LLM_SERVICE_BASE = BACKEND_BASE
-  ? `${BACKEND_BASE}/api/llm`
-  : (process.env.REACT_APP_LLM_API_BASE?.trim?.() || "http://localhost:5003");
+// Production: Use REACT_APP_BACKEND_URL which should point to Render backend
+// Development: Set REACT_APP_BACKEND_URL=http://localhost:8000 in .env.local
+
+const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL?.trim?.();
+
+if (!BACKEND_BASE) {
+  console.error('❌ REACT_APP_BACKEND_URL is not set!');
+  console.error('Set it to: https://cpsc-3720-project.onrender.com for production');
+  console.error('Or: http://localhost:8000 for local development');
+  throw new Error('REACT_APP_BACKEND_URL environment variable is required');
+}
+
+const CLIENT_SERVICE_BASE = `${BACKEND_BASE}/api/client`;
+const LLM_SERVICE_BASE = `${BACKEND_BASE}/api/llm`;
+
+console.log('🔧 API Configuration:');
+console.log(`  Backend: ${BACKEND_BASE}`);
+console.log(`  Client Service: ${CLIENT_SERVICE_BASE}`);
+console.log(`  LLM Service: ${LLM_SERVICE_BASE}`);
 
   /**
  * @function fetchEvents
