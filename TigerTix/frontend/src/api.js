@@ -2,8 +2,14 @@
 
 // src/api.js
 // Service endpoints configuration
-const CLIENT_SERVICE_BASE = process.env.REACT_APP_CLIENT_API_BASE?.trim?.() || "http://localhost:6001";
-const LLM_SERVICE_BASE = process.env.REACT_APP_LLM_API_BASE?.trim?.() || "http://localhost:5003";
+// Use single backend URL for deployed environment, individual services for local dev
+const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL?.trim?.() || "";
+const CLIENT_SERVICE_BASE = BACKEND_BASE 
+  ? `${BACKEND_BASE}/api/client`
+  : (process.env.REACT_APP_CLIENT_API_BASE?.trim?.() || "http://localhost:6001");
+const LLM_SERVICE_BASE = BACKEND_BASE
+  ? `${BACKEND_BASE}/api/llm`
+  : (process.env.REACT_APP_LLM_API_BASE?.trim?.() || "http://localhost:5003");
 
   /**
  * @function fetchEvents
