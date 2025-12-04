@@ -109,16 +109,17 @@ const proxyOptions = {
 app.use('/api/admin', createProxyMiddleware({
   target: `http://localhost:${SERVICES.ADMIN}`,
   pathRewrite: {
-    '^/api/admin': '/api' // /api/admin/events → /api/events
+    '^/api/admin': '/api' // Remove /admin prefix when forwarding
   },
   ...proxyOptions
 }));
 
-// Client Service proxy
-app.use('/api/client', createProxyMiddleware({
+// Client Service proxy - with legacy /api/events support
+app.use(['/api/client', '/api/events'], createProxyMiddleware({
   target: `http://localhost:${SERVICES.CLIENT}`,
   pathRewrite: {
-    '^/api/client': '/api' // /api/client/events → /api/events
+    '^/api/client': '/api', // Remove /client prefix when forwarding
+    '^/api/events': '/api/events' // Keep /events as-is for legacy support
   },
   ...proxyOptions
 }));
@@ -127,7 +128,7 @@ app.use('/api/client', createProxyMiddleware({
 app.use('/api/llm', createProxyMiddleware({
   target: `http://localhost:${SERVICES.LLM}`,
   pathRewrite: {
-    '^/api/llm': '/api/llm' // /api/llm/parse → /api/llm/parse
+    '^/api/llm': '/api/llm' // Keep full path
   },
   ...proxyOptions
 }));
@@ -136,7 +137,7 @@ app.use('/api/llm', createProxyMiddleware({
 app.use('/api/auth', createProxyMiddleware({
   target: `http://localhost:${SERVICES.AUTH}`,
   pathRewrite: {
-    '^/api/auth': '/api/auth' // /api/auth/login → /api/auth/login
+    '^/api/auth': '/api/auth' // Keep full path since auth service expects /api/auth
   },
   ...proxyOptions
 }));
