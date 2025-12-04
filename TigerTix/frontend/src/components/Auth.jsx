@@ -104,14 +104,12 @@ function Auth({ onLoginSuccess }) {
 
 			console.log('📡 Response status:', response.status, response.statusText);
 
-			// Check if response is JSON
+			// Get content type and raw response
 			const contentType = response.headers.get('content-type');
-			console.log('📄 Content-Type:', contentType);
-
-			// Get raw response text first
 			const responseText = await response.text();
-			console.log('📥 Raw response:', responseText);
+			
 			console.log('📄 Content-Type:', contentType);
+			console.log('📥 Raw response:', responseText.substring(0, 200));
 
 			// Check if response is JSON
 			if (!contentType || !contentType.includes('application/json')) {

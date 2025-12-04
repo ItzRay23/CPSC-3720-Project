@@ -9,38 +9,39 @@ const PORT = process.env.PORT || 5004;
 // Middleware - CORS configuration
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allow requests with no origin (server-to-server, curl, etc.)
     if (!origin) {
-      console.log('✅ Auth Service: Allowed (no origin)');
       return callback(null, true);
     }
     
-    console.log(`🔍 Auth Service: Checking origin: ${origin}`);
-    
-    // Allow all Vercel URLs (preview and production), localhost
+    // Allow all Vercel URLs, localhost, and configured frontend URL
     if (/^https:\/\/.*\.vercel\.app$/.test(origin) ||
         /^http:\/\/localhost:\d+$/.test(origin) ||
         origin === process.env.FRONTEND_URL) {
-      console.log(`✅ Auth Service: Allowed origin ${origin}`);
+      console.log(`✅ Auth CORS: ${origin}`);
       return callback(null, true);
     }
     
-    console.error(`❌ Auth Service: BLOCKED origin ${origin}`);
+    console.error(`❌ Auth CORS BLOCKED: ${origin}`);
     return callback(null, false);
   },
-  credentials: true // Allow cookies
+  credentials: true, // Allow cookies for cross-origin requests
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Set-Cookie']
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`📨 Auth Service: ${req.method} ${req.path}`);
-  console.log(`   Origin: ${req.headers.origin || 'none'}`);
-  console.log(`   Content-Type: ${req.headers['content-type'] || 'none'}`);
-  next();
-});
+// Request logging middleware (development only)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`📨 ${req.method} ${req.path} from ${req.headers.origin || 'no-origin'}`);
+    next();
+  });
+}
 
 // Routes
 app.use('/api/auth', authRoutes);

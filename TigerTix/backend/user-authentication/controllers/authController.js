@@ -39,11 +39,11 @@ const authController = {
         }
       };
 
-      console.log('✅ Registration successful, sending response:', JSON.stringify(responseData));
+      console.log('✅ Registration successful:', responseData.user.email);
       res.status(201).json(responseData);
     } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ error: 'Registration failed' });
+      console.error('❌ Registration error:', error.message);
+      res.status(500).json({ error: 'Registration failed', details: process.env.NODE_ENV === 'development' ? error.message : undefined });
     }
   },
 
@@ -102,11 +102,11 @@ const authController = {
         }
       };
 
-      console.log('✅ Login successful, sending response:', JSON.stringify(responseData));
+      console.log('✅ Login successful:', responseData.user.email);
       res.status(200).json(responseData);
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ error: 'Login failed' });
+      console.error('❌ Login error:', error.message);
+      res.status(500).json({ error: 'Login failed', details: process.env.NODE_ENV === 'development' ? error.message : undefined });
     }
   },
 

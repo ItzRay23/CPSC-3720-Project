@@ -32,46 +32,44 @@ const allowedOriginPatterns = [
   /^http:\/\/localhost:\d+$/ // Any localhost port
 ];
 
-// CORS middleware with proper error handling
+// CORS middleware configuration
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (server-to-server, curl, Postman, etc.)
     if (!origin) {
-      console.log('✅ CORS: Allowed (no origin header)');
       return callback(null, true);
     }
     
-    console.log(`🔍 CORS: Checking origin: ${origin}`);
-    
-    // Check exact matches first
+    // Check exact matches first (configured origins)
     if (allowedOrigins.includes(origin)) {
-      console.log(`✅ CORS: Allowed origin (exact match): ${origin}`);
+      console.log(`✅ CORS: ${origin}`);
       return callback(null, true);
     }
     
-    // Check pattern matches
+    // Check pattern matches (Vercel, localhost)
     for (const pattern of allowedOriginPatterns) {
       if (pattern.test(origin)) {
-        console.log(`✅ CORS: Allowed origin (pattern match): ${origin} matches ${pattern}`);
+        console.log(`✅ CORS: ${origin}`);
         return callback(null, true);
       }
     }
     
     // Block unrecognized origins
-    console.error(`❌ CORS: BLOCKED origin: ${origin}`);
-    console.error(`   Allowed origins: ${JSON.stringify(allowedOrigins)}`);
-    console.error(`   Allowed patterns: ${allowedOriginPatterns.map(p => p.toString())}`);
-    
-    // Return false to block - browser will show CORS error
+    console.error(`❌ CORS BLOCKED: ${origin}`);
+    console.error(`   Expected: ${JSON.stringify(allowedOrigins)} or matching ${allowedOriginPatterns.map(p => p.toString()).join(', ')}`);
     return callback(null, false);
   },
-  credentials: true,
+  credentials: true, // Required for cookies
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 200, // For legacy browser support
+  preflightContinue: false
 };
 
 app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
