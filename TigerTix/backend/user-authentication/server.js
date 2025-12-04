@@ -7,7 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 5004;
 
 // Middleware - CORS configuration
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) {
       console.log('✅ Auth Service: Allowed (no origin)');
@@ -25,12 +25,27 @@ app.use(cors({
     }
     
     console.error(`❌ Auth Service: BLOCKED origin ${origin}`);
-    return callback(null, false);
+    callback(new Error(`CORS policy: Origin ${origin} not allowed by auth service`), false);
   },
   credentials: true // Allow cookies
-}));
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+
+// CORS error handler
+app.use((err, req, res, next) => {
+  if (err && err.message && err.message.includes('CORS policy')) {
+    console.error('🚫 Auth CORS Error:', err.message);
+    return res.status(403).json({
+      success: false,
+      error: 'CORS Error',
+      message: err.message
+    });
+  }
+  next(err);
+});
 
 // Request logging middleware
 app.use((req, res, next) => {

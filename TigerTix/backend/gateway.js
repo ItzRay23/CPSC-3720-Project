@@ -32,7 +32,8 @@ const allowedOriginPatterns = [
   /^http:\/\/localhost:\d+$/ // Any localhost port
 ];
 
-app.use(cors({
+// CORS middleware with proper error handling
+const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) {
@@ -60,13 +61,32 @@ app.use(cors({
     console.error(`❌ CORS: BLOCKED origin: ${origin}`);
     console.error(`   Allowed origins: ${JSON.stringify(allowedOrigins)}`);
     console.error(`   Allowed patterns: ${allowedOriginPatterns.map(p => p.toString())}`);
-    return callback(null, false); // Return false instead of Error to avoid crash
+    
+    // Send proper JSON error instead of blocking silently
+    callback(new Error(`CORS policy: Origin ${origin} not allowed`), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   optionsSuccessStatus: 200 // Some legacy browsers choke on 204
-}));
+};
+
+app.use(cors(corsOptions));
+
+// Handle CORS errors explicitly
+app.use((err, req, res, next) => {
+  if (err && err.message && err.message.includes('CORS policy')) {
+    console.error('🚫 CORS Error:', err.message);
+    return res.status(403).json({
+      success: false,
+      error: 'CORS Error',
+      message: err.message,
+      allowedOrigins: allowedOrigins,
+      allowedPatterns: allowedOriginPatterns.map(p => p.toString())
+    });
+  }
+  next(err);
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {

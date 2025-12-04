@@ -86,8 +86,8 @@ const authController = {
       // Store token securely in HTTP-only cookie
       res.cookie('authToken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        sameSite: 'strict',
+        secure: true, // Always use HTTPS (required for sameSite: 'none')
+        sameSite: 'none', // Allow cross-origin cookies (Vercel frontend → Render backend)
         maxAge: 30 * 60 * 1000 // 30 minutes
       });
 
